@@ -76,7 +76,6 @@ import { ref } from 'vue'
 const navLinks = [
   { to: '/', label: 'Dashboard' },
   { to: '/categories', label: 'Categories' },
-  { to: '/tracker', label: 'Tracker' },
   { to: '/credit-cards', label: 'Cards' },
   { to: '/insights', label: 'Insights' },
 ]

@@ -76,7 +76,7 @@
 
     <RouterLink
       v-if="store.categories.length > 0"
-      to="/tracker"
+      to="/categories"
       class="mt-4 flex items-center justify-center gap-1.5 text-xs text-text-muted hover:text-accent transition-colors pt-3 border-t border-white/5"
     >
       View full tracker
