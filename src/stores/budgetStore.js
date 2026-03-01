@@ -44,6 +44,10 @@ export const useBudgetStore = defineStore('budget', () => {
     totalExpense.value + totalInvestment.value + totalEMI.value + totalSaving.value
   )
 
+  const categoryMap = computed(() =>
+    Object.fromEntries(categories.value.map(c => [c.id, c]))
+  )
+
   function completionForMonth(year, month) {
     const monthData = tracking.value[year]?.[month] ?? {}
     const total = categories.value.length
@@ -114,7 +118,8 @@ export const useBudgetStore = defineStore('budget', () => {
   async function addCategory(payload) {
     const usedColors = categories.value.map(c => c.color)
     const nextColor = COLOR_PALETTE.find(c => !usedColors.includes(c)) ?? COLOR_PALETTE[categories.value.length % COLOR_PALETTE.length]
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session.user
     const newCat = {
       id: generateId(),
       user_id: user.id,
@@ -161,19 +166,27 @@ export const useBudgetStore = defineStore('budget', () => {
   }
 
   async function setTracking(year, month, categoryId, value) {
-    const { data: { user } } = await supabase.auth.getUser()
-    const { error } = await supabase.from('tracking').upsert({
-      user_id: user.id,
-      category_id: categoryId,
-      year,
-      month,
-      value,
-    }, { onConflict: 'user_id,category_id,year,month' })
-    if (error) throw error
-
+    // Optimistic update — reflect the change in the UI immediately
     if (!tracking.value[year]) tracking.value[year] = {}
     if (!tracking.value[year][month]) tracking.value[year][month] = {}
+    const prev = tracking.value[year][month][categoryId]
     tracking.value[year][month][categoryId] = value
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const { error } = await supabase.from('tracking').upsert({
+        user_id: session.user.id,
+        category_id: categoryId,
+        year,
+        month,
+        value,
+      }, { onConflict: 'user_id,category_id,year,month' })
+      if (error) throw error
+    } catch (e) {
+      // Revert on failure
+      tracking.value[year][month][categoryId] = prev
+      throw e
+    }
   }
 
   async function toggleTracking(year, month, categoryId) {
@@ -182,7 +195,8 @@ export const useBudgetStore = defineStore('budget', () => {
   }
 
   async function setYear(year) {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session.user
     const { error } = await supabase.from('settings').upsert({
       user_id: user.id,
       current_year: year,
@@ -192,7 +206,8 @@ export const useBudgetStore = defineStore('budget', () => {
   }
 
   async function importFromJSON(data) {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session.user
 
     if (Array.isArray(data.budget_categories) && data.budget_categories.length > 0) {
       const rows = data.budget_categories.map(c => ({
@@ -242,7 +257,8 @@ export const useBudgetStore = defineStore('budget', () => {
   }
 
   async function clearAllData() {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session.user
     // Deleting categories cascades to tracking rows via FK
     await supabase.from('categories').delete().eq('user_id', user.id)
     await supabase.from('settings').delete().eq('user_id', user.id)
@@ -268,6 +284,7 @@ export const useBudgetStore = defineStore('budget', () => {
     totalEMI,
     totalSaving,
     totalBudget,
+    categoryMap,
     completionForMonth,
     completionForYear,
     isTracked,

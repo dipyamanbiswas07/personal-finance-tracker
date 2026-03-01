@@ -70,7 +70,7 @@ const state = computed(() => {
   if (typeof v === 'number' && v > 0) return 'partial'
   return 'none'
 })
-const category = computed(() => store.categories.find(c => c.id === props.categoryId))
+const category = computed(() => store.categoryMap[props.categoryId])
 
 const buttonTitle = computed(() => {
   if (state.value === 'done') return 'Paid in full — click to edit'
