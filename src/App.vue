@@ -1,7 +1,15 @@
 <template>
   <div class="min-h-screen bg-bg-base">
+    <!-- Ambient background glow -->
+    <div class="fixed inset-0 z-0 pointer-events-none" aria-hidden="true">
+      <div
+        class="absolute -top-32 left-1/2 -translate-x-1/2 w-[1000px] h-[560px] rounded-full"
+        style="background: radial-gradient(ellipse at top, rgba(99,102,241,0.09) 0%, transparent 68%)"
+      />
+    </div>
+
     <!-- Full-screen loading spinner -->
-    <div v-if="isLoading" class="flex items-center justify-center min-h-screen">
+    <div v-if="isLoading" class="relative z-10 flex items-center justify-center min-h-screen">
       <div class="flex flex-col items-center gap-3">
         <div
           class="w-8 h-8 border-2 rounded-full border-accent/30 border-t-accent animate-spin"
@@ -11,16 +19,16 @@
     </div>
 
     <template v-else>
-      <AppHeader v-if="authStore.user" />
-      <main
-        :class="authStore.user ? 'max-w-7xl mx-auto px-4 sm:px-6 py-8' : ''"
-      >
-        <RouterView v-slot="{ Component }">
-          <Transition name="fade" mode="out-in">
-            <component :is="Component" />
-          </Transition>
-        </RouterView>
-      </main>
+      <div class="relative z-10">
+        <AppHeader v-if="authStore.user" />
+        <main :class="authStore.user ? 'max-w-7xl mx-auto px-4 sm:px-6 py-8' : ''">
+          <RouterView v-slot="{ Component }">
+            <Transition name="fade" mode="out-in">
+              <component :is="Component" />
+            </Transition>
+          </RouterView>
+        </main>
+      </div>
     </template>
   </div>
 </template>

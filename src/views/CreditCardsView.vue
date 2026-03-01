@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between anim-fade-up" style="animation-delay:0s">
       <div>
         <h1 class="text-xl font-semibold text-text-primary">Credit Cards</h1>
         <p class="text-text-muted text-sm mt-0.5">Track monthly payments for each card</p>
@@ -49,7 +49,7 @@
     </div>
 
     <!-- Tracker grid -->
-    <div v-else class="glass-card overflow-hidden">
+    <div v-else class="glass-card overflow-hidden anim-fade-up" style="animation-delay:0.08s">
       <div class="overflow-x-auto scrollbar-thin">
         <table class="w-full min-w-[700px]">
           <thead>
@@ -90,7 +90,7 @@
                 :key="monthIdx"
                 :class="[
                   'px-1.5 py-2.5 text-center',
-                  monthIdx === currentMonth && isCurrentYear ? 'bg-accent/5' : '',
+                  monthIdx === currentMonth && isCurrentYear ? 'bg-accent/10' : '',
                 ]"
               >
                 <div class="flex justify-center">
@@ -146,7 +146,7 @@
                 :key="monthIdx"
                 :class="[
                   'px-1.5 py-2.5 text-center',
-                  monthIdx === currentMonth && isCurrentYear ? 'bg-accent/5' : '',
+                  monthIdx === currentMonth && isCurrentYear ? 'bg-accent/10' : '',
                 ]"
               >
                 <span

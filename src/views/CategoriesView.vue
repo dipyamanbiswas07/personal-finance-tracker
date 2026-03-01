@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between anim-fade-up" style="animation-delay:0s">
       <div>
         <h1 class="text-xl font-semibold text-text-primary">Categories</h1>
         <p class="text-text-muted text-sm mt-0.5">Manage and track your budget categories</p>
@@ -37,7 +37,7 @@
     </div>
 
     <!-- Empty state -->
-    <div v-if="store.categories.length === 0" class="glass-card text-center py-16">
+    <div v-if="store.categories.length === 0" class="glass-card text-center py-16 anim-fade-up" style="animation-delay:0.08s">
       <div class="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-4">
         <svg class="w-8 h-8 text-accent/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -49,7 +49,7 @@
     </div>
 
     <!-- Combined grid -->
-    <div v-else class="glass-card overflow-hidden">
+    <div v-else class="glass-card overflow-hidden anim-fade-up" style="animation-delay:0.08s">
       <div class="overflow-x-auto scrollbar-thin">
         <table class="w-full min-w-[760px]">
           <thead>
@@ -106,7 +106,7 @@
                 :key="monthIdx"
                 :class="[
                   'px-1.5 py-2 text-center',
-                  monthIdx === currentMonth && isCurrentYear ? 'bg-accent/5' : '',
+                  monthIdx === currentMonth && isCurrentYear ? 'bg-accent/10' : '',
                 ]"
               >
                 <div class="flex justify-center">
@@ -154,7 +154,7 @@
                 :key="monthIdx"
                 :class="[
                   'px-1.5 py-2.5 text-center',
-                  monthIdx === currentMonth && isCurrentYear ? 'bg-accent/5' : '',
+                  monthIdx === currentMonth && isCurrentYear ? 'bg-accent/10' : '',
                 ]"
               >
                 <span

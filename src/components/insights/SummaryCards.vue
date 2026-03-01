@@ -3,21 +3,33 @@
     <div
       v-for="card in cards"
       :key="card.label"
-      class="glass-card p-4 space-y-3"
+      class="glass-card p-4 space-y-3 relative overflow-hidden transition-transform duration-200 hover:-translate-y-0.5"
     >
+      <!-- Colored top accent strip -->
+      <div
+        class="absolute inset-x-0 top-0 h-[2.5px] rounded-t-xl"
+        :style="{ backgroundColor: card.accentColor }"
+      />
+      <!-- Soft color wash in top-right corner -->
+      <div
+        class="absolute -top-6 -right-6 w-20 h-20 rounded-full opacity-[0.06] blur-xl pointer-events-none"
+        :style="{ backgroundColor: card.accentColor }"
+      />
+
       <div class="flex items-start justify-between">
-        <p class="text-xs font-medium text-text-muted uppercase tracking-wider">{{ card.label }}</p>
-        <div :class="['w-8 h-8 rounded-lg flex items-center justify-center', card.iconBg]">
+        <p class="text-[11px] font-semibold text-text-muted uppercase tracking-widest pt-0.5">{{ card.label }}</p>
+        <div :class="['w-8 h-8 rounded-lg flex items-center justify-center shrink-0', card.iconBg]">
           <component :is="card.icon" class="w-4 h-4" :class="card.iconColor" />
         </div>
       </div>
+
       <div>
-        <p class="text-xl font-bold text-text-primary">
+        <p class="text-2xl font-bold text-text-primary tabular-nums leading-none">
           <span v-if="card.prefix" class="text-sm font-normal text-text-muted mr-0.5">{{ card.prefix }}</span>
           {{ card.value }}
           <span v-if="card.suffix" class="text-sm font-normal text-text-muted ml-0.5">{{ card.suffix }}</span>
         </p>
-        <p class="text-xs text-text-muted mt-0.5">{{ card.sub }}</p>
+        <p class="text-xs text-text-muted mt-1.5">{{ card.sub }}</p>
       </div>
     </div>
   </div>
@@ -76,6 +88,7 @@ const RemainingIcon = {
 const cards = computed(() => [
   {
     label: 'Monthly Budget',
+    accentColor: '#6366f1',
     value: fmt(store.totalBudget),
     prefix: sym.value,
     sub: `${store.categories.length} categories`,
@@ -85,6 +98,7 @@ const cards = computed(() => [
   },
   {
     label: 'This Month',
+    accentColor: monthCompletion.value.percent === 100 ? '#10b981' : '#6366f1',
     value: monthCompletion.value.percent,
     suffix: '%',
     sub: `${monthCompletion.value.done} of ${monthCompletion.value.total} done`,
@@ -94,6 +108,7 @@ const cards = computed(() => [
   },
   {
     label: 'Paid So Far',
+    accentColor: '#10b981',
     value: fmt(paidSoFar.value),
     prefix: sym.value,
     sub: now.toLocaleString('default', { month: 'long' }),
@@ -103,6 +118,7 @@ const cards = computed(() => [
   },
   {
     label: 'Remaining',
+    accentColor: remaining.value === 0 ? '#10b981' : '#ef4444',
     value: fmt(remaining.value),
     prefix: sym.value,
     sub: remaining.value === 0 ? 'all done!' : 'left this month',
@@ -111,5 +127,4 @@ const cards = computed(() => [
     iconColor: remaining.value === 0 ? 'text-investment' : 'text-expense',
   },
 ])
-
 </script>

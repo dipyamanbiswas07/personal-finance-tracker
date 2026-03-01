@@ -19,17 +19,32 @@
   }
 
   .nav-link {
-    @apply px-4 py-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 transition-all duration-200 text-sm font-medium;
+    @apply px-3.5 py-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/5 transition-all duration-200 text-sm font-medium;
   }
 
   .nav-link.router-link-active {
-    @apply text-accent bg-accent/10;
+    @apply text-accent bg-accent/15 font-semibold;
   }
 }
 
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: #6366f1 transparent;
+    scrollbar-color: rgba(99,102,241,0.4) transparent;
   }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.anim-fade-up {
+  animation: fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
 }

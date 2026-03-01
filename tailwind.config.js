@@ -7,6 +7,10 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+        mono: ['"DM Mono"', 'ui-monospace', 'monospace'],
+      },
       colors: {
         'bg-base': '#0f1117',
         'bg-surface': '#1a1d27',
