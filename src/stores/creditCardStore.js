@@ -17,6 +17,7 @@ export const useCreditCardStore = defineStore('creditCard', () => {
   const tracking = ref({})
   const currentYear = ref(new Date().getFullYear())
   const loading = ref(false)
+  let userId = null
 
   // ── Getters ──────────────────────────────────────────────────────────────
 
@@ -36,6 +37,9 @@ export const useCreditCardStore = defineStore('creditCard', () => {
   async function loadData() {
     loading.value = true
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      userId = session?.user?.id ?? null
+
       const [cardsRes, trackRes] = await Promise.all([
         supabase.from('cc_cards').select('*').order('id'),
         supabase.from('cc_tracking').select('*'),
@@ -68,9 +72,7 @@ export const useCreditCardStore = defineStore('creditCard', () => {
     const nextColor =
       COLOR_PALETTE.find(c => !usedColors.includes(c)) ??
       COLOR_PALETTE[cards.value.length % COLOR_PALETTE.length]
-    const { data: { session } } = await supabase.auth.getSession()
-    const user = session.user
-    const newCard = { id: generateId(), user_id: user.id, name: name.trim(), color: nextColor }
+    const newCard = { id: generateId(), user_id: userId, name: name.trim(), color: nextColor }
     const { error } = await supabase.from('cc_cards').insert(newCard)
     if (error) throw error
     cards.value.push(newCard)
@@ -97,9 +99,8 @@ export const useCreditCardStore = defineStore('creditCard', () => {
     tracking.value[year][month][cardId] = !current
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
       const { error } = await supabase.from('cc_tracking').upsert({
-        user_id: session.user.id,
+        user_id: userId,
         card_id: cardId,
         year,
         month,
@@ -118,11 +119,8 @@ export const useCreditCardStore = defineStore('creditCard', () => {
   }
 
   async function importFromJSON(data) {
-    const { data: { session } } = await supabase.auth.getSession()
-    const user = session.user
-
     if (Array.isArray(data.cc_cards) && data.cc_cards.length > 0) {
-      const rows = data.cc_cards.map(c => ({ id: c.id, user_id: user.id, name: c.name, color: c.color }))
+      const rows = data.cc_cards.map(c => ({ id: c.id, user_id: userId, name: c.name, color: c.color }))
       const { error } = await supabase.from('cc_cards').upsert(rows, { onConflict: 'id' })
       if (error) throw error
       cards.value = data.cc_cards.map(c => ({ id: c.id, name: c.name, color: c.color }))
@@ -133,7 +131,7 @@ export const useCreditCardStore = defineStore('creditCard', () => {
       for (const [year, months] of Object.entries(data.cc_tracking)) {
         for (const [month, cardMap] of Object.entries(months)) {
           for (const [cardId, paid] of Object.entries(cardMap)) {
-            rows.push({ user_id: user.id, card_id: cardId, year: Number(year), month: Number(month), paid: Boolean(paid) })
+            rows.push({ user_id: userId, card_id: cardId, year: Number(year), month: Number(month), paid: Boolean(paid) })
           }
         }
       }
@@ -149,13 +147,12 @@ export const useCreditCardStore = defineStore('creditCard', () => {
     cards.value = []
     tracking.value = {}
     currentYear.value = new Date().getFullYear()
+    userId = null
   }
 
   async function clearAllData() {
-    const { data: { session } } = await supabase.auth.getSession()
-    const user = session.user
     // Deleting cc_cards cascades to cc_tracking via FK
-    await supabase.from('cc_cards').delete().eq('user_id', user.id)
+    await supabase.from('cc_cards').delete().eq('user_id', userId)
     clearData()
   }
 

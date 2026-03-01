@@ -20,6 +20,7 @@ export const useBudgetStore = defineStore('budget', () => {
     currentYear: new Date().getFullYear(),
   })
   const loading = ref(false)
+  let userId = null
 
   // ── Getters ────────────────────────────────────────────────────────────────
 
@@ -77,6 +78,9 @@ export const useBudgetStore = defineStore('budget', () => {
   async function loadData() {
     loading.value = true
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      userId = session?.user?.id ?? null
+
       const [catsRes, trackRes, settRes] = await Promise.all([
         supabase.from('categories').select('*').order('created_at'),
         supabase.from('tracking').select('*'),
@@ -118,11 +122,9 @@ export const useBudgetStore = defineStore('budget', () => {
   async function addCategory(payload) {
     const usedColors = categories.value.map(c => c.color)
     const nextColor = COLOR_PALETTE.find(c => !usedColors.includes(c)) ?? COLOR_PALETTE[categories.value.length % COLOR_PALETTE.length]
-    const { data: { session } } = await supabase.auth.getSession()
-    const user = session.user
     const newCat = {
       id: generateId(),
-      user_id: user.id,
+      user_id: userId,
       name: payload.name.trim(),
       amount: Number(payload.amount),
       type: payload.type,
@@ -173,9 +175,8 @@ export const useBudgetStore = defineStore('budget', () => {
     tracking.value[year][month][categoryId] = value
 
     try {
-      const { data: { session } } = await supabase.auth.getSession()
       const { error } = await supabase.from('tracking').upsert({
-        user_id: session.user.id,
+        user_id: userId,
         category_id: categoryId,
         year,
         month,
@@ -195,10 +196,8 @@ export const useBudgetStore = defineStore('budget', () => {
   }
 
   async function setYear(year) {
-    const { data: { session } } = await supabase.auth.getSession()
-    const user = session.user
     const { error } = await supabase.from('settings').upsert({
-      user_id: user.id,
+      user_id: userId,
       current_year: year,
     }, { onConflict: 'user_id' })
     if (error) throw error
@@ -206,13 +205,10 @@ export const useBudgetStore = defineStore('budget', () => {
   }
 
   async function importFromJSON(data) {
-    const { data: { session } } = await supabase.auth.getSession()
-    const user = session.user
-
     if (Array.isArray(data.budget_categories) && data.budget_categories.length > 0) {
       const rows = data.budget_categories.map(c => ({
         id: c.id,
-        user_id: user.id,
+        user_id: userId,
         name: c.name,
         amount: Number(c.amount),
         type: c.type,
@@ -229,7 +225,7 @@ export const useBudgetStore = defineStore('budget', () => {
       for (const [year, months] of Object.entries(data.budget_tracking)) {
         for (const [month, cats] of Object.entries(months)) {
           for (const [catId, value] of Object.entries(cats)) {
-            rows.push({ user_id: user.id, category_id: catId, year: Number(year), month: Number(month), value })
+            rows.push({ user_id: userId, category_id: catId, year: Number(year), month: Number(month), value })
           }
         }
       }
@@ -242,7 +238,7 @@ export const useBudgetStore = defineStore('budget', () => {
 
     if (data.budget_settings) {
       await supabase.from('settings').upsert({
-        user_id: user.id,
+        user_id: userId,
         currency_symbol: data.budget_settings.currencySymbol ?? '₹',
         current_year: data.budget_settings.currentYear ?? new Date().getFullYear(),
       }, { onConflict: 'user_id' })
@@ -254,14 +250,13 @@ export const useBudgetStore = defineStore('budget', () => {
     categories.value = []
     tracking.value = {}
     settings.value = { currencySymbol: '₹', currentYear: new Date().getFullYear() }
+    userId = null
   }
 
   async function clearAllData() {
-    const { data: { session } } = await supabase.auth.getSession()
-    const user = session.user
     // Deleting categories cascades to tracking rows via FK
-    await supabase.from('categories').delete().eq('user_id', user.id)
-    await supabase.from('settings').delete().eq('user_id', user.id)
+    await supabase.from('categories').delete().eq('user_id', userId)
+    await supabase.from('settings').delete().eq('user_id', userId)
     clearData()
   }
 
