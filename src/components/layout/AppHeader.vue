@@ -23,7 +23,7 @@
           </RouterLink>
         </nav>
 
-        <!-- Right side: export/import + mobile nav -->
+        <!-- Right side: export/import + sign out + mobile nav -->
         <div class="flex items-center gap-1">
           <!-- Export / Import (always visible) -->
           <button
@@ -46,6 +46,31 @@
             </svg>
             Import
           </button>
+
+          <!-- Clear data -->
+          <button
+            title="Clear all data"
+            class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-expense hover:bg-expense/10 transition-colors"
+            @click="handleClearData"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Clear data
+          </button>
+
+          <!-- Sign Out -->
+          <button
+            title="Sign out"
+            class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors"
+            @click="handleSignOut"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+            </svg>
+            Sign out
+          </button>
+
           <!-- Icon-only on mobile -->
           <button title="Export" class="sm:hidden p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors" @click="exportData">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -55,6 +80,16 @@
           <button title="Import" class="sm:hidden p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors" @click="triggerImport">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+          </button>
+          <button title="Clear data" class="sm:hidden p-2 rounded-lg text-text-muted hover:text-expense hover:bg-expense/10 transition-colors" @click="handleClearData">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+          <button title="Sign out" class="sm:hidden p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors" @click="handleSignOut">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
             </svg>
           </button>
           <input ref="fileInput" type="file" accept=".json" class="hidden" @change="importData" />
@@ -83,6 +118,15 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../../stores/authStore.js'
+import { useBudgetStore } from '../../stores/budgetStore.js'
+import { useCreditCardStore } from '../../stores/creditCardStore.js'
+
+const router = useRouter()
+const authStore = useAuthStore()
+const store = useBudgetStore()
+const ccStore = useCreditCardStore()
 
 const mainLinks = [
   { to: '/', label: 'Dashboard' },
@@ -92,22 +136,15 @@ const utilLinks = [
   { to: '/credit-cards', label: 'Cards' },
 ]
 
-const KEYS = [
-  'budget_categories',
-  'budget_tracking',
-  'budget_settings',
-  'cc_cards',
-  'cc_tracking',
-  'cc_settings',
-]
-
 const fileInput = ref(null)
 
 function exportData() {
-  const data = {}
-  for (const key of KEYS) {
-    const val = localStorage.getItem(key)
-    if (val) data[key] = JSON.parse(val)
+  const data = {
+    budget_categories: store.categories,
+    budget_tracking: store.tracking,
+    budget_settings: store.settings,
+    cc_cards: ccStore.cards,
+    cc_tracking: ccStore.tracking,
   }
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
@@ -122,24 +159,33 @@ function triggerImport() {
   fileInput.value.click()
 }
 
-function importData(e) {
+async function importData(e) {
   const file = e.target.files[0]
   if (!file) return
   const reader = new FileReader()
-  reader.onload = (ev) => {
+  reader.onload = async (ev) => {
     try {
       const data = JSON.parse(ev.target.result)
-      for (const key of KEYS) {
-        if (data[key] !== undefined) {
-          localStorage.setItem(key, JSON.stringify(data[key]))
-        }
-      }
-      window.location.reload()
-    } catch {
-      alert('Invalid file — please use a file exported from this app.')
+      await Promise.all([
+        store.importFromJSON(data),
+        ccStore.importFromJSON(data),
+      ])
+      alert('Import complete!')
+    } catch (err) {
+      alert('Import failed: ' + (err.message ?? 'Invalid file.'))
     }
   }
   reader.readAsText(file)
   e.target.value = ''
+}
+
+async function handleClearData() {
+  if (!confirm('Delete ALL your data permanently? This cannot be undone.')) return
+  await Promise.all([store.clearAllData(), ccStore.clearAllData()])
+}
+
+async function handleSignOut() {
+  await authStore.signOut()
+  router.push('/login')
 }
 </script>

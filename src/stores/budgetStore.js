@@ -1,11 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-
-const STORAGE_KEYS = {
-  categories: 'budget_categories',
-  tracking: 'budget_tracking',
-  settings: 'budget_settings',
-}
+import { supabase } from '../lib/supabase.js'
 
 const COLOR_PALETTE = [
   '#6366f1', '#ef4444', '#10b981', '#f59e0b',
@@ -24,6 +19,7 @@ export const useBudgetStore = defineStore('budget', () => {
     currencySymbol: '₹',
     currentYear: new Date().getFullYear(),
   })
+  const loading = ref(false)
 
   // ── Getters ────────────────────────────────────────────────────────────────
 
@@ -72,96 +68,196 @@ export const useBudgetStore = defineStore('budget', () => {
     return tracking.value[year]?.[month]?.[categoryId] ?? false
   }
 
-  function setTracking(year, month, categoryId, value) {
-    if (!tracking.value[year]) tracking.value[year] = {}
-    if (!tracking.value[year][month]) tracking.value[year][month] = {}
-    tracking.value[year][month][categoryId] = value
-    persistTracking()
-  }
-
   // ── Actions ────────────────────────────────────────────────────────────────
 
-  function addCategory(payload) {
+  async function loadData() {
+    loading.value = true
+    try {
+      const [catsRes, trackRes, settRes] = await Promise.all([
+        supabase.from('categories').select('*').order('created_at'),
+        supabase.from('tracking').select('*'),
+        supabase.from('settings').select('*').single(),
+      ])
+
+      if (catsRes.data) {
+        categories.value = catsRes.data.map(row => ({
+          id: row.id,
+          name: row.name,
+          amount: Number(row.amount),
+          type: row.type,
+          color: row.color,
+          createdAt: row.created_at,
+        }))
+      }
+
+      if (trackRes.data) {
+        const map = {}
+        for (const row of trackRes.data) {
+          map[row.year] ??= {}
+          map[row.year][row.month] ??= {}
+          map[row.year][row.month][row.category_id] = row.value
+        }
+        tracking.value = map
+      }
+
+      if (settRes.data) {
+        settings.value = {
+          currencySymbol: settRes.data.currency_symbol ?? '₹',
+          currentYear: settRes.data.current_year ?? new Date().getFullYear(),
+        }
+      }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function addCategory(payload) {
     const usedColors = categories.value.map(c => c.color)
     const nextColor = COLOR_PALETTE.find(c => !usedColors.includes(c)) ?? COLOR_PALETTE[categories.value.length % COLOR_PALETTE.length]
-    categories.value.push({
+    const { data: { user } } = await supabase.auth.getUser()
+    const newCat = {
       id: generateId(),
+      user_id: user.id,
       name: payload.name.trim(),
       amount: Number(payload.amount),
       type: payload.type,
       color: payload.color ?? nextColor,
-      createdAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+    }
+    const { error } = await supabase.from('categories').insert(newCat)
+    if (error) throw error
+    categories.value.push({
+      id: newCat.id,
+      name: newCat.name,
+      amount: newCat.amount,
+      type: newCat.type,
+      color: newCat.color,
+      createdAt: newCat.created_at,
     })
-    persistCategories()
   }
 
-  function updateCategory(id, payload) {
-    const idx = categories.value.findIndex(c => c.id === id)
-    if (idx === -1) return
-    categories.value[idx] = {
-      ...categories.value[idx],
+  async function updateCategory(id, payload) {
+    const { error } = await supabase.from('categories').update({
       name: payload.name.trim(),
       amount: Number(payload.amount),
       type: payload.type,
+    }).eq('id', id)
+    if (error) throw error
+    const idx = categories.value.findIndex(c => c.id === id)
+    if (idx !== -1) {
+      categories.value[idx] = {
+        ...categories.value[idx],
+        name: payload.name.trim(),
+        amount: Number(payload.amount),
+        type: payload.type,
+      }
     }
-    persistCategories()
   }
 
-  function deleteCategory(id) {
+  async function deleteCategory(id) {
+    const { error } = await supabase.from('categories').delete().eq('id', id)
+    if (error) throw error
     categories.value = categories.value.filter(c => c.id !== id)
-    persistCategories()
   }
 
-  function toggleTracking(year, month, categoryId) {
+  async function setTracking(year, month, categoryId, value) {
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase.from('tracking').upsert({
+      user_id: user.id,
+      category_id: categoryId,
+      year,
+      month,
+      value,
+    }, { onConflict: 'user_id,category_id,year,month' })
+    if (error) throw error
+
     if (!tracking.value[year]) tracking.value[year] = {}
     if (!tracking.value[year][month]) tracking.value[year][month] = {}
-    const current = tracking.value[year][month][categoryId] ?? false
-    tracking.value[year][month][categoryId] = !current
-    persistTracking()
+    tracking.value[year][month][categoryId] = value
   }
 
-  function setYear(year) {
+  async function toggleTracking(year, month, categoryId) {
+    const current = tracking.value[year]?.[month]?.[categoryId] ?? false
+    await setTracking(year, month, categoryId, !current)
+  }
+
+  async function setYear(year) {
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase.from('settings').upsert({
+      user_id: user.id,
+      current_year: year,
+    }, { onConflict: 'user_id' })
+    if (error) throw error
     settings.value.currentYear = year
-    persistSettings()
   }
 
-  // ── Persistence ────────────────────────────────────────────────────────────
+  async function importFromJSON(data) {
+    const { data: { user } } = await supabase.auth.getUser()
 
-  function persistCategories() {
-    localStorage.setItem(STORAGE_KEYS.categories, JSON.stringify(categories.value))
-  }
+    if (Array.isArray(data.budget_categories) && data.budget_categories.length > 0) {
+      const rows = data.budget_categories.map(c => ({
+        id: c.id,
+        user_id: user.id,
+        name: c.name,
+        amount: Number(c.amount),
+        type: c.type,
+        color: c.color,
+        created_at: c.createdAt ?? new Date().toISOString(),
+      }))
+      const { error } = await supabase.from('categories').upsert(rows, { onConflict: 'id' })
+      if (error) throw error
+      categories.value = data.budget_categories.map(c => ({ ...c, amount: Number(c.amount) }))
+    }
 
-  function persistTracking() {
-    localStorage.setItem(STORAGE_KEYS.tracking, JSON.stringify(tracking.value))
-  }
-
-  function persistSettings() {
-    localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(settings.value))
-  }
-
-  function loadFromStorage() {
-    try {
-      const cats = localStorage.getItem(STORAGE_KEYS.categories)
-      if (cats) categories.value = JSON.parse(cats)
-
-      const track = localStorage.getItem(STORAGE_KEYS.tracking)
-      if (track) tracking.value = JSON.parse(track)
-
-      const sett = localStorage.getItem(STORAGE_KEYS.settings)
-      if (sett) {
-        const parsed = JSON.parse(sett)
-        settings.value = { ...settings.value, ...parsed }
+    if (data.budget_tracking) {
+      const rows = []
+      for (const [year, months] of Object.entries(data.budget_tracking)) {
+        for (const [month, cats] of Object.entries(months)) {
+          for (const [catId, value] of Object.entries(cats)) {
+            rows.push({ user_id: user.id, category_id: catId, year: Number(year), month: Number(month), value })
+          }
+        }
       }
-    } catch (e) {
-      console.error('Failed to load from localStorage:', e)
+      if (rows.length > 0) {
+        const { error } = await supabase.from('tracking').upsert(rows, { onConflict: 'user_id,category_id,year,month' })
+        if (error) throw error
+      }
+      tracking.value = data.budget_tracking
+    }
+
+    if (data.budget_settings) {
+      await supabase.from('settings').upsert({
+        user_id: user.id,
+        currency_symbol: data.budget_settings.currencySymbol ?? '₹',
+        current_year: data.budget_settings.currentYear ?? new Date().getFullYear(),
+      }, { onConflict: 'user_id' })
+      settings.value = { ...settings.value, ...data.budget_settings }
     }
   }
+
+  function clearData() {
+    categories.value = []
+    tracking.value = {}
+    settings.value = { currencySymbol: '₹', currentYear: new Date().getFullYear() }
+  }
+
+  async function clearAllData() {
+    const { data: { user } } = await supabase.auth.getUser()
+    // Deleting categories cascades to tracking rows via FK
+    await supabase.from('categories').delete().eq('user_id', user.id)
+    await supabase.from('settings').delete().eq('user_id', user.id)
+    clearData()
+  }
+
+  // ── Legacy alias (called from App.vue) ────────────────────────────────────
+  const loadFromStorage = loadData
 
   return {
     // state
     categories,
     tracking,
     settings,
+    loading,
     // getters
     expenses,
     investments,
@@ -177,12 +273,16 @@ export const useBudgetStore = defineStore('budget', () => {
     isTracked,
     getTrackingValue,
     // actions
+    loadData,
+    loadFromStorage,
+    importFromJSON,
     addCategory,
     updateCategory,
     deleteCategory,
     toggleTracking,
     setTracking,
     setYear,
-    loadFromStorage,
+    clearData,
+    clearAllData,
   }
 })
