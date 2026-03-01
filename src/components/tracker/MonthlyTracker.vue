@@ -36,11 +36,14 @@
             :key="cat.id"
             class="border-b border-white/5 hover:bg-white/5 transition-colors group"
           >
-            <!-- Category name (sticky) -->
+            <!-- Category name + amount (sticky) -->
             <td class="px-4 py-2.5 sticky left-0 bg-bg-card group-hover:bg-[#222536] z-10 transition-colors">
               <div class="flex items-center gap-2.5 min-w-0">
                 <div class="w-1.5 h-5 rounded-full shrink-0" :style="{ backgroundColor: cat.color }" />
-                <span class="text-sm text-text-primary truncate">{{ cat.name }}</span>
+                <div class="min-w-0">
+                  <p class="text-sm text-text-primary truncate">{{ cat.name }}</p>
+                  <p class="text-xs text-text-muted/60">{{ store.settings.currencySymbol }}{{ fmt(cat.amount) }}</p>
+                </div>
               </div>
             </td>
 
@@ -106,4 +109,8 @@ const now = new Date()
 const currentMonth = now.getMonth() + 1
 const isCurrentYear = computed(() => store.settings.currentYear === now.getFullYear())
 const completions = computed(() => store.completionForYear(store.settings.currentYear))
+
+function fmt(n) {
+  return new Intl.NumberFormat('en-IN').format(n)
+}
 </script>
