@@ -1,13 +1,14 @@
-# Monthly Budget Tracker
+# Personal Finance Tracker
 
-A personal monthly budget tracker built as a Vue 3 SPA. Configure budget categories, tag them as Expense or Investment, set monthly amounts, and mark them as done for each month of the year. All data is stored locally in the browser — no backend, no accounts.
+A personal finance tracker built as a Vue 3 SPA. Configure budget categories across four types, track monthly payments with full or partial amounts, and monitor investments — all stored locally in the browser with no backend or accounts required.
 
 ## Features
 
-- **Categories** — Add, edit, and delete budget categories with a name, monthly amount, and type (Expense or Investment)
-- **Monthly Tracker** — 12-column grid to mark each category as done per month; switch between years
-- **Dashboard** — Summary cards and a quick-toggle view for the current month
-- **Insights** — SVG donut chart, monthly progress bars, and a filterable category breakdown table
+- **Dashboard** — Summary cards (budget, completion %, paid so far, remaining), budget split donut chart with embedded cumulative investments line chart, quick-toggle tracker for the current month, YTD summary, monthly completion bars, and a category breakdown table
+- **Categories** — Add, edit, and delete budget categories with a name, monthly amount, and type (Expense, Investment, EMI/Loan, Short term saving). 12-column tracking grid with year selector built into the same view
+- **Three-state tracking** — Mark categories as done (full amount), partial (enter a custom amount), or reset to undone; partial amounts count toward completion
+- **Credit Cards** — Track monthly credit card payment status separately from budget categories
+- **Export / Import** — Download all data as a JSON file and restore it on any device via the header buttons
 - **Persistent storage** — Everything saved to `localStorage`; survives page refreshes
 
 ## Tech Stack
@@ -15,7 +16,7 @@ A personal monthly budget tracker built as a Vue 3 SPA. Configure budget categor
 - [Vue 3](https://vuejs.org/) + [Vite](https://vitejs.dev/)
 - [Pinia](https://pinia.vuejs.org/) — state management
 - [Vue Router 4](https://router.vuejs.org/) — hash-mode routing (no server required)
-- [Tailwind CSS v3](https://tailwindcss.com/) — utility-first styling, dark mode via `class` strategy
+- [Tailwind CSS v3](https://tailwindcss.com/) — utility-first styling, dark-only design
 
 ## Getting Started
 
@@ -31,32 +32,23 @@ npm run build    # production build → dist/
 npm run preview  # preview the production build locally
 ```
 
-## Project Structure
+## Routes
 
-```
-src/
-├── assets/main.css          # Tailwind directives + base styles
-├── router/index.js          # 4 routes (hash mode)
-├── stores/budgetStore.js    # Pinia store — all state, getters, actions
-├── components/
-│   ├── layout/AppHeader.vue
-│   ├── ui/                  # BaseButton, BaseInput, BaseSelect, BaseModal, BaseBadge
-│   ├── categories/          # CategoryList, CategoryCard, CategoryForm
-│   ├── tracker/             # MonthlyTracker, MonthCell, YearSelector, QuickTracker
-│   └── insights/            # SummaryCards, DonutChart, MonthlyProgress, CategoryBreakdown
-└── views/
-    ├── DashboardView.vue
-    ├── CategoriesView.vue
-    ├── TrackerView.vue
-    └── InsightsView.vue
-```
+| Path | Description |
+|---|---|
+| `/` | Dashboard (merged with insights) |
+| `/categories` | Category management + 12-month tracking grid |
+| `/credit-cards` | Credit card payment tracker |
 
 ## Data Storage
 
-All data lives in `localStorage` under three keys:
+All data lives in `localStorage` under these keys:
 
 | Key | Contents |
 |---|---|
 | `budget_categories` | Array of category objects (id, name, amount, type, color) |
-| `budget_tracking` | Nested map: `year → month → categoryId → boolean` |
+| `budget_tracking` | Nested map: `year → month → categoryId → false \| true \| number` |
 | `budget_settings` | Currency symbol and selected year |
+| `cc_cards` | Array of credit card objects (id, name, color) |
+| `cc_tracking` | Nested map: `year → month → cardId → boolean` |
+| `cc_settings` | Selected year for credit cards view |
