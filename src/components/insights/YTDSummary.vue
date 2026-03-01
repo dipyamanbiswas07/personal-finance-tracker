@@ -28,13 +28,14 @@
         </p>
         <div class="h-1.5 bg-white/10 rounded-full overflow-hidden">
           <div
-            class="h-full bg-investment rounded-full transition-all duration-700"
+            :class="['h-full rounded-full transition-all duration-700', investmentPercent > 100 ? 'bg-expense' : 'bg-investment']"
             :style="{ width: Math.min(investmentPercent, 100) + '%' }"
           />
         </div>
         <div class="flex items-center justify-between text-xs text-text-muted">
           <span>of {{ store.settings.currencySymbol }}{{ formatAmount(investmentPlannedYTD) }} planned</span>
-          <span>{{ store.settings.currencySymbol }}{{ formatAmount(investmentPlannedYTD - investmentDoneYTD) }} left</span>
+          <span v-if="investmentPercent > 100" class="text-expense">+{{ formatAmount(investmentDoneYTD - investmentPlannedYTD) }} over</span>
+          <span v-else>{{ store.settings.currencySymbol }}{{ formatAmount(investmentPlannedYTD - investmentDoneYTD) }} left</span>
         </div>
       </div>
 
@@ -58,7 +59,8 @@
         </div>
         <div class="flex items-center justify-between text-xs text-text-muted">
           <span>of {{ store.settings.currencySymbol }}{{ formatAmount(expensePlannedYTD) }} planned</span>
-          <span>{{ store.settings.currencySymbol }}{{ formatAmount(expensePlannedYTD - expenseDoneYTD) }} left</span>
+          <span v-if="expensePercent > 100" class="text-expense">+{{ formatAmount(expenseDoneYTD - expensePlannedYTD) }} over</span>
+          <span v-else>{{ store.settings.currencySymbol }}{{ formatAmount(expensePlannedYTD - expenseDoneYTD) }} left</span>
         </div>
       </div>
 
@@ -76,13 +78,14 @@
         </p>
         <div class="h-1.5 bg-white/10 rounded-full overflow-hidden">
           <div
-            class="h-full bg-emi rounded-full transition-all duration-700"
+            :class="['h-full rounded-full transition-all duration-700', emiPercent > 100 ? 'bg-expense' : 'bg-emi']"
             :style="{ width: Math.min(emiPercent, 100) + '%' }"
           />
         </div>
         <div class="flex items-center justify-between text-xs text-text-muted">
           <span>of {{ store.settings.currencySymbol }}{{ formatAmount(emiPlannedYTD) }} planned</span>
-          <span>{{ store.settings.currencySymbol }}{{ formatAmount(emiPlannedYTD - emiDoneYTD) }} left</span>
+          <span v-if="emiPercent > 100" class="text-expense">+{{ formatAmount(emiDoneYTD - emiPlannedYTD) }} over</span>
+          <span v-else>{{ store.settings.currencySymbol }}{{ formatAmount(emiPlannedYTD - emiDoneYTD) }} left</span>
         </div>
       </div>
 
@@ -100,13 +103,14 @@
         </p>
         <div class="h-1.5 bg-white/10 rounded-full overflow-hidden">
           <div
-            class="h-full bg-accent rounded-full transition-all duration-700"
+            :class="['h-full rounded-full transition-all duration-700', totalPercent > 100 ? 'bg-expense' : 'bg-accent']"
             :style="{ width: Math.min(totalPercent, 100) + '%' }"
           />
         </div>
         <div class="flex items-center justify-between text-xs text-text-muted">
           <span>of {{ store.settings.currencySymbol }}{{ formatAmount(totalPlannedYTD) }} planned</span>
-          <span>{{ store.settings.currencySymbol }}{{ formatAmount(totalPlannedYTD - totalDoneYTD) }} left</span>
+          <span v-if="totalPercent > 100" class="text-expense">+{{ formatAmount(totalDoneYTD - totalPlannedYTD) }} over</span>
+          <span v-else>{{ store.settings.currencySymbol }}{{ formatAmount(totalPlannedYTD - totalDoneYTD) }} left</span>
         </div>
       </div>
     </div>

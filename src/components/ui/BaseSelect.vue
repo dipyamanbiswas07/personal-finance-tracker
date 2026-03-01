@@ -8,7 +8,7 @@
       v-bind="$attrs"
       :value="modelValue"
       :disabled="disabled"
-      class="w-full px-3 py-2 bg-bg-base border border-white/10 rounded-lg text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors appearance-none cursor-pointer"
+      class="w-full px-3 py-2 bg-bg-base border border-white/10 rounded-lg text-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors appearance-none cursor-pointer"
       @change="$emit('update:modelValue', $event.target.value)"
     >
       <option v-for="opt in options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>

@@ -133,6 +133,14 @@
 
           <input ref="fileInput" type="file" accept=".json" class="hidden" @change="importData" />
 
+          <BaseConfirmDialog
+            v-model="showClearConfirm"
+            title="Clear all data"
+            message="Delete ALL your data permanently? This cannot be undone."
+            confirm-label="Delete all"
+            @confirm="executeClearData"
+          />
+
           <!-- Mobile nav -->
           <div class="flex sm:hidden items-center gap-1 ml-1 pl-2 border-l border-white/10">
             <RouterLink v-for="link in mainLinks" :key="link.to" :to="link.to"
@@ -162,11 +170,16 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/authStore.js'
 import { useBudgetStore } from '../../stores/budgetStore.js'
 import { useCreditCardStore } from '../../stores/creditCardStore.js'
+import { useToast } from '../../composables/useToast.js'
+import BaseConfirmDialog from '../ui/BaseConfirmDialog.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const store = useBudgetStore()
 const ccStore = useCreditCardStore()
+const { toast } = useToast()
+
+const showClearConfirm = ref(false)
 
 const mainLinks = [
   { to: '/', label: 'Dashboard' },
@@ -228,17 +241,20 @@ async function importData(e) {
     try {
       const data = JSON.parse(ev.target.result)
       await Promise.all([store.importFromJSON(data), ccStore.importFromJSON(data)])
-      alert('Import complete!')
+      toast.success('Import complete!')
     } catch (err) {
-      alert('Import failed: ' + (err.message ?? 'Invalid file.'))
+      toast.error('Import failed: ' + (err.message ?? 'Invalid file.'))
     }
   }
   reader.readAsText(file)
   e.target.value = ''
 }
 
-async function handleClearData() {
-  if (!confirm('Delete ALL your data permanently? This cannot be undone.')) return
+function handleClearData() {
+  showClearConfirm.value = true
+}
+
+async function executeClearData() {
   await Promise.all([store.clearAllData(), ccStore.clearAllData()])
 }
 

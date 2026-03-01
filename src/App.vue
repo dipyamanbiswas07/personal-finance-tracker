@@ -30,6 +30,8 @@
         </main>
       </div>
     </template>
+
+    <AppToast />
   </div>
 </template>
 
@@ -40,6 +42,7 @@ import { useAuthStore } from "./stores/authStore.js";
 import { useCreditCardStore } from "./stores/creditCardStore.js";
 import { useBudgetStore } from "./stores/budgetStore.js";
 import AppHeader from "./components/layout/AppHeader.vue";
+import AppToast from "./components/ui/AppToast.vue";
 
 const router = useRouter();
 const route = useRoute();

@@ -71,8 +71,8 @@
         </div>
 
         <!-- Alerts -->
-        <div v-if="errorMsg" class="alert error">{{ errorMsg }}</div>
-        <div v-if="successMsg" class="alert success">{{ successMsg }}</div>
+        <div v-if="errorMsg" class="alert error" role="alert">{{ errorMsg }}</div>
+        <div v-if="successMsg" class="alert success" role="alert">{{ successMsg }}</div>
 
         <!-- Social providers -->
         <div class="social-btns">

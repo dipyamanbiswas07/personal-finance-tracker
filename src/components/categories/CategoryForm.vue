@@ -23,8 +23,8 @@
       />
       <div class="flex justify-end gap-3 pt-2">
         <BaseButton variant="secondary" @click="open = false">Cancel</BaseButton>
-        <BaseButton type="submit" variant="primary">
-          {{ isEdit ? 'Save Changes' : 'Add Category' }}
+        <BaseButton type="submit" variant="primary" :disabled="submitting">
+          {{ submitting ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Category' }}
         </BaseButton>
       </div>
     </form>
@@ -43,7 +43,7 @@ const props = defineProps({
   modelValue: { type: Boolean, default: false },
   category: { type: Object, default: null },
 })
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'saved'])
 
 const store = useBudgetStore()
 
@@ -64,6 +64,7 @@ const typeOptions = [
 const blankForm = () => ({ name: '', amount: '', type: 'Expense' })
 const form = ref(blankForm())
 const errors = ref({})
+const submitting = ref(false)
 
 watch(open, (val) => {
   if (val) {
@@ -71,6 +72,7 @@ watch(open, (val) => {
       ? { name: props.category.name, amount: String(props.category.amount), type: props.category.type }
       : blankForm()
     errors.value = {}
+    submitting.value = false
   }
 })
 
@@ -84,13 +86,19 @@ function validate() {
   return Object.keys(e).length === 0
 }
 
-function submit() {
+async function submit() {
   if (!validate()) return
-  if (isEdit.value) {
-    store.updateCategory(props.category.id, form.value)
-  } else {
-    store.addCategory(form.value)
+  submitting.value = true
+  try {
+    if (isEdit.value) {
+      await store.updateCategory(props.category.id, form.value)
+    } else {
+      await store.addCategory(form.value)
+    }
+    emit('saved', isEdit.value)
+    open.value = false
+  } finally {
+    submitting.value = false
   }
-  open.value = false
 }
 </script>

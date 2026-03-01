@@ -86,7 +86,7 @@
     </RouterLink>
 
     <!-- Shared partial amount modal -->
-    <BaseModal v-model="showModal" :title="`Payment — ${selectedCat?.name ?? ''}`">
+    <BaseModal :model-value="showModal" :title="`Payment — ${selectedCat?.name ?? ''}`" @update:model-value="handleModalClose">
       <div class="space-y-4">
         <p class="text-text-muted text-sm">
           Full amount:
@@ -105,24 +105,36 @@
         <div class="flex items-center justify-between gap-2">
           <BaseButton variant="danger" size="sm" @click="resetTracking">Not done</BaseButton>
           <div class="flex gap-2">
-            <BaseButton variant="secondary" size="sm" @click="showModal = false">Cancel</BaseButton>
+            <BaseButton variant="secondary" size="sm" @click="handleModalClose(false)">Cancel</BaseButton>
             <BaseButton variant="primary" size="sm" :disabled="!validAmount" @click="confirmPartial">Save</BaseButton>
           </div>
         </div>
       </div>
     </BaseModal>
+
+    <!-- Discard confirm -->
+    <BaseConfirmDialog
+      v-model="showDiscardDialog"
+      title="Discard changes?"
+      message="You have an unsaved amount entered. Discard it?"
+      confirm-label="Discard"
+      @confirm="closeModal"
+    />
   </div>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
 import { useBudgetStore } from '../../stores/budgetStore.js'
+import { useToast } from '../../composables/useToast.js'
 import BaseBadge from '../ui/BaseBadge.vue'
 import BaseModal from '../ui/BaseModal.vue'
 import BaseInput from '../ui/BaseInput.vue'
 import BaseButton from '../ui/BaseButton.vue'
+import BaseConfirmDialog from '../ui/BaseConfirmDialog.vue'
 
 const store = useBudgetStore()
+const { toast } = useToast()
 
 const now = new Date()
 const currentYear = now.getFullYear()
@@ -139,30 +151,58 @@ function trackingState(categoryId) {
 }
 
 const showModal = ref(false)
+const showDiscardDialog = ref(false)
 const selectedCat = ref(null)
 const partialInput = ref('')
+const originalInput = ref('')
 const validAmount = computed(() => Number(partialInput.value) > 0)
 
 function handleRowClick(cat) {
   selectedCat.value = cat
   const state = trackingState(cat.id)
-  partialInput.value = state === 'partial'
+  const val = state === 'partial'
     ? String(store.getTrackingValue(currentYear, currentMonth, cat.id))
     : String(cat.amount ?? '')
+  partialInput.value = val
+  originalInput.value = val
   showModal.value = true
 }
 
-function confirmPartial() {
+function handleModalClose(val) {
+  if (!val) {
+    if (partialInput.value !== '' && partialInput.value !== originalInput.value) {
+      showDiscardDialog.value = true
+      return
+    }
+    closeModal()
+  }
+}
+
+function closeModal() {
+  showModal.value = false
+  partialInput.value = ''
+  originalInput.value = ''
+}
+
+async function confirmPartial() {
   if (!validAmount.value || !selectedCat.value) return
   const amt = Number(partialInput.value)
   const value = amt >= (selectedCat.value.amount ?? Infinity) ? true : amt
-  store.setTracking(currentYear, currentMonth, selectedCat.value.id, value)
+  try {
+    await store.setTracking(currentYear, currentMonth, selectedCat.value.id, value)
+  } catch {
+    toast.error('Failed to save. Try again.')
+  }
   showModal.value = false
 }
 
-function resetTracking() {
+async function resetTracking() {
   if (!selectedCat.value) return
-  store.setTracking(currentYear, currentMonth, selectedCat.value.id, false)
+  try {
+    await store.setTracking(currentYear, currentMonth, selectedCat.value.id, false)
+  } catch {
+    toast.error('Failed to save. Try again.')
+  }
   showModal.value = false
 }
 
