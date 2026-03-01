@@ -19,38 +19,52 @@
           </RouterLink>
         </nav>
 
-        <!-- Export / Import -->
+        <!-- Right side: export/import + mobile nav -->
         <div class="flex items-center gap-1">
+          <!-- Export / Import (always visible) -->
           <button
-            title="Export data"
-            class="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors"
+            title="Export data to file"
+            class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors"
             @click="exportData"
           >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
             </svg>
+            Export
           </button>
           <button
-            title="Import data"
-            class="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors"
+            title="Import data from file"
+            class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors"
             @click="triggerImport"
           >
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            Import
+          </button>
+          <!-- Icon-only on mobile -->
+          <button title="Export" class="sm:hidden p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors" @click="exportData">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4-4m0 0l4 4m-4-4v12" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+          </button>
+          <button title="Import" class="sm:hidden p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors" @click="triggerImport">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
             </svg>
           </button>
           <input ref="fileInput" type="file" accept=".json" class="hidden" @change="importData" />
-        </div>
 
-        <!-- Mobile nav -->
-        <nav class="flex sm:hidden items-center gap-1">
-          <RouterLink v-for="link in navLinks" :key="link.to" :to="link.to"
-            class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text-primary hover:bg-white/5 transition-colors"
-            active-class="!text-accent !bg-accent/10"
-          >
-            {{ link.label }}
-          </RouterLink>
-        </nav>
+          <!-- Mobile nav (divider + links, small screens only) -->
+          <div class="flex sm:hidden items-center gap-1 ml-1 pl-2 border-l border-white/10">
+            <RouterLink v-for="link in navLinks" :key="link.to" :to="link.to"
+              class="px-2 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text-primary hover:bg-white/5 transition-colors"
+              active-class="!text-accent !bg-accent/10"
+            >
+              {{ link.label }}
+            </RouterLink>
+          </div>
+        </div>
       </div>
     </div>
   </header>
