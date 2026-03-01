@@ -14,7 +14,11 @@
 
         <!-- Desktop nav -->
         <nav class="hidden sm:flex items-center gap-1">
-          <RouterLink v-for="link in navLinks" :key="link.to" :to="link.to" class="nav-link">
+          <RouterLink v-for="link in mainLinks" :key="link.to" :to="link.to" class="nav-link">
+            {{ link.label }}
+          </RouterLink>
+          <span class="w-px h-4 bg-white/15 mx-1" />
+          <RouterLink v-for="link in utilLinks" :key="link.to" :to="link.to" class="nav-link">
             {{ link.label }}
           </RouterLink>
         </nav>
@@ -57,7 +61,14 @@
 
           <!-- Mobile nav (divider + links, small screens only) -->
           <div class="flex sm:hidden items-center gap-1 ml-1 pl-2 border-l border-white/10">
-            <RouterLink v-for="link in navLinks" :key="link.to" :to="link.to"
+            <RouterLink v-for="link in mainLinks" :key="link.to" :to="link.to"
+              class="px-2 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text-primary hover:bg-white/5 transition-colors"
+              active-class="!text-accent !bg-accent/10"
+            >
+              {{ link.label }}
+            </RouterLink>
+            <span class="w-px h-3.5 bg-white/15 mx-0.5" />
+            <RouterLink v-for="link in utilLinks" :key="link.to" :to="link.to"
               class="px-2 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text-primary hover:bg-white/5 transition-colors"
               active-class="!text-accent !bg-accent/10"
             >
@@ -73,11 +84,12 @@
 <script setup>
 import { ref } from 'vue'
 
-const navLinks = [
+const mainLinks = [
   { to: '/', label: 'Dashboard' },
   { to: '/categories', label: 'Categories' },
+]
+const utilLinks = [
   { to: '/credit-cards', label: 'Cards' },
-  { to: '/insights', label: 'Insights' },
 ]
 
 const KEYS = [

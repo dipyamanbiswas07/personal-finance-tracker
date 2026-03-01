@@ -38,23 +38,23 @@ function fmt(n) {
 }
 
 const sym = computed(() => store.settings.currencySymbol)
-
 const monthCompletion = computed(() => store.completionForMonth(currentYear, currentMonth))
 
-// SVG icon components (inline to avoid file bloat)
+const paidSoFar = computed(() =>
+  store.categories.reduce((sum, cat) => {
+    const v = store.getTrackingValue(currentYear, currentMonth, cat.id)
+    if (v === true) return sum + (cat.amount ?? 0)
+    if (typeof v === 'number' && v > 0) return sum + v
+    return sum
+  }, 0)
+)
+
+const remaining = computed(() => Math.max(0, (store.totalBudget ?? 0) - paidSoFar.value))
+
+// SVG icon components
 const WalletIcon = {
   render: () => h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '2' }, [
     h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' })
-  ])
-}
-const ExpIcon = {
-  render: () => h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '2' }, [
-    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M20 12H4m8-8l-8 8 8 8' })
-  ])
-}
-const InvIcon = {
-  render: () => h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '2' }, [
-    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' })
   ])
 }
 const CheckIcon = {
@@ -62,43 +62,54 @@ const CheckIcon = {
     h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' })
   ])
 }
+const PaidIcon = {
+  render: () => h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '2' }, [
+    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' })
+  ])
+}
+const RemainingIcon = {
+  render: () => h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor', 'stroke-width': '2' }, [
+    h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' })
+  ])
+}
 
 const cards = computed(() => [
   {
-    label: 'Total Budget',
+    label: 'Monthly Budget',
     value: fmt(store.totalBudget),
     prefix: sym.value,
-    sub: 'per month',
+    sub: `${store.categories.length} categories`,
     icon: WalletIcon,
     iconBg: 'bg-accent/15',
     iconColor: 'text-accent',
   },
   {
-    label: 'Total Expenses',
-    value: fmt(store.totalExpense),
-    prefix: sym.value,
-    sub: `${store.expenses.length} categories`,
-    icon: ExpIcon,
-    iconBg: 'bg-expense/15',
-    iconColor: 'text-expense',
-  },
-  {
-    label: 'Investments',
-    value: fmt(store.totalInvestment),
-    prefix: sym.value,
-    sub: `${store.investments.length} categories`,
-    icon: InvIcon,
-    iconBg: 'bg-investment/15',
-    iconColor: 'text-investment',
-  },
-  {
     label: 'This Month',
     value: monthCompletion.value.percent,
     suffix: '%',
-    sub: `${monthCompletion.value.done}/${monthCompletion.value.total} done`,
+    sub: `${monthCompletion.value.done} of ${monthCompletion.value.total} done`,
     icon: CheckIcon,
     iconBg: monthCompletion.value.percent === 100 ? 'bg-investment/15' : 'bg-accent/15',
     iconColor: monthCompletion.value.percent === 100 ? 'text-investment' : 'text-accent',
   },
+  {
+    label: 'Paid So Far',
+    value: fmt(paidSoFar.value),
+    prefix: sym.value,
+    sub: now.toLocaleString('default', { month: 'long' }),
+    icon: PaidIcon,
+    iconBg: 'bg-investment/15',
+    iconColor: 'text-investment',
+  },
+  {
+    label: 'Remaining',
+    value: fmt(remaining.value),
+    prefix: sym.value,
+    sub: remaining.value === 0 ? 'all done!' : 'left this month',
+    icon: RemainingIcon,
+    iconBg: remaining.value === 0 ? 'bg-investment/15' : 'bg-expense/15',
+    iconColor: remaining.value === 0 ? 'text-investment' : 'text-expense',
+  },
 ])
+
 </script>
