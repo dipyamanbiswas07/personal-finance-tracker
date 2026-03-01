@@ -25,72 +25,59 @@
 
         <!-- Right side: export/import + sign out + mobile nav -->
         <div class="flex items-center gap-1">
-          <!-- Export / Import (always visible) -->
-          <button
-            title="Export data to file"
-            class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors"
-            @click="exportData"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-            </svg>
-            Export
-          </button>
-          <button
-            title="Import data from file"
-            class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors"
-            @click="triggerImport"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-            Import
-          </button>
+          <!-- Data dropdown -->
+          <div class="relative" ref="dataMenuRef">
+            <button
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors"
+              @click="dataMenuOpen = !dataMenuOpen"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 5.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+              </svg>
+              <span class="hidden sm:inline">Data</span>
+              <svg class="w-3 h-3 hidden sm:block transition-transform duration-150" :class="dataMenuOpen ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
 
-          <!-- Clear data -->
-          <button
-            title="Clear all data"
-            class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-expense hover:bg-expense/10 transition-colors"
-            @click="handleClearData"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-            Clear data
-          </button>
+            <Transition name="dropdown">
+              <div
+                v-if="dataMenuOpen"
+                class="absolute right-0 top-full mt-1.5 w-44 rounded-xl border border-white/10 bg-bg-card/95 backdrop-blur-sm shadow-xl py-1 z-50"
+              >
+                <button class="dropdown-item" @click="exportData(); dataMenuOpen = false">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                  Export
+                </button>
+                <button class="dropdown-item" @click="triggerImport(); dataMenuOpen = false">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                  Import
+                </button>
+                <div class="my-1 border-t border-white/8" />
+                <button class="dropdown-item text-expense/80 hover:text-expense hover:bg-expense/10" @click="handleClearData(); dataMenuOpen = false">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Clear all data
+                </button>
+              </div>
+            </Transition>
+          </div>
 
           <!-- Sign Out -->
           <button
             title="Sign out"
-            class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors"
             @click="handleSignOut"
           >
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
             </svg>
-            Sign out
-          </button>
-
-          <!-- Icon-only on mobile -->
-          <button title="Export" class="sm:hidden p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors" @click="exportData">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-            </svg>
-          </button>
-          <button title="Import" class="sm:hidden p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors" @click="triggerImport">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-          </button>
-          <button title="Clear data" class="sm:hidden p-2 rounded-lg text-text-muted hover:text-expense hover:bg-expense/10 transition-colors" @click="handleClearData">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
-          <button title="Sign out" class="sm:hidden p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors" @click="handleSignOut">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-            </svg>
+            <span class="hidden sm:inline">Sign out</span>
           </button>
           <input ref="fileInput" type="file" accept=".json" class="hidden" @change="importData" />
 
@@ -117,7 +104,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/authStore.js'
 import { useBudgetStore } from '../../stores/budgetStore.js'
@@ -137,6 +124,16 @@ const utilLinks = [
 ]
 
 const fileInput = ref(null)
+const dataMenuOpen = ref(false)
+const dataMenuRef = ref(null)
+
+function onClickOutside(e) {
+  if (dataMenuRef.value && !dataMenuRef.value.contains(e.target)) {
+    dataMenuOpen.value = false
+  }
+}
+onMounted(() => document.addEventListener('mousedown', onClickOutside))
+onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 
 function exportData() {
   const data = {
@@ -189,3 +186,33 @@ async function handleSignOut() {
   router.push('/login')
 }
 </script>
+
+<style scoped>
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #94a3b8;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+  text-align: left;
+}
+.dropdown-item:hover {
+  color: #f1f5f9;
+  background: rgba(255,255,255,0.06);
+}
+
+.dropdown-enter-active, .dropdown-leave-active {
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.dropdown-enter-from, .dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+</style>
