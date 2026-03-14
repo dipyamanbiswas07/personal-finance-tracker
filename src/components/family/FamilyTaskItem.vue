@@ -1,7 +1,7 @@
 <template>
   <div
     :class="[
-      'flex items-center gap-3 px-4 py-3 border-b border-white/5 last:border-b-0 group transition-colors',
+      'flex items-center gap-3 px-4 py-4 border-b border-white/5 last:border-b-0 group transition-colors',
       task.is_done ? 'opacity-60' : '',
     ]"
   >
@@ -22,29 +22,38 @@
 
     <!-- Title + meta -->
     <div class="flex-1 min-w-0">
-      <p :class="['text-sm truncate', task.is_done ? 'line-through text-text-muted' : 'text-text-primary']">
+      <p :class="['text-base', task.is_done ? 'line-through text-text-muted' : 'text-text-primary']">
         {{ task.title }}
       </p>
-      <div class="flex items-center gap-2 mt-0.5">
-        <!-- Assignee badge -->
-        <span v-if="task.assignee_id" class="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/10 text-accent font-medium">
-          {{ assigneeLabel }}
+      <div class="flex items-center flex-wrap gap-2 mt-1">
+        <!-- Added by -->
+        <span class="text-xs px-2 py-0.5 rounded-full bg-white/5 text-text-muted">
+          Added by {{ creatorLabel }}
+        </span>
+        <!-- Assigned to -->
+        <span v-if="task.assignee_id" class="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium">
+          Assigned to {{ assigneeLabel }}
         </span>
         <!-- Due date -->
         <span
           v-if="task.due_date"
           :class="[
-            'text-[10px] px-1.5 py-0.5 rounded-full font-medium',
+            'text-xs px-2 py-0.5 rounded-full font-medium',
             isOverdue ? 'bg-expense/10 text-expense' : 'bg-white/5 text-text-muted',
           ]"
         >
           {{ formatDueDate(task.due_date) }}
         </span>
+        <!-- Overdue label -->
+        <span v-if="isOverdue" class="text-xs px-2 py-0.5 rounded-full bg-expense/20 text-expense font-semibold">
+          Overdue
+        </span>
       </div>
     </div>
 
-    <!-- Delete -->
+    <!-- Delete (only own tasks) -->
     <button
+      v-if="task.created_by === authStore.user?.id"
       class="p-1.5 rounded-lg text-text-muted hover:text-expense hover:bg-expense/10 transition-colors opacity-0 group-hover:opacity-100"
       title="Delete task"
       @click="$emit('delete', task.id)"
@@ -69,19 +78,30 @@ defineEmits(['toggle', 'delete'])
 
 const authStore = useAuthStore()
 
-const assigneeLabel = computed(() => {
-  if (!props.task.assignee_id) return ''
-  if (props.task.assignee_id === authStore.user?.id) return 'You'
-  return `${props.task.assignee_id.slice(0, 6)}…`
-})
+function memberName(userId) {
+  if (!userId) return 'Unknown'
+  if (userId === authStore.user?.id) return 'You'
+  const member = props.members.find(m => m.user_id === userId)
+  return member?.display_name || `${userId.slice(0, 6)}…`
+}
+
+const creatorLabel = computed(() => memberName(props.task.created_by))
+
+const assigneeLabel = computed(() => memberName(props.task.assignee_id))
+
+// Parse "YYYY-MM-DD" as local date (not UTC)
+function parseLocalDate(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
 
 const isOverdue = computed(() => {
   if (!props.task.due_date || props.task.is_done) return false
-  return new Date(props.task.due_date) < new Date(new Date().toDateString())
+  return parseLocalDate(props.task.due_date) < new Date(new Date().toDateString())
 })
 
 function formatDueDate(dateStr) {
-  const d = new Date(dateStr)
+  const d = parseLocalDate(dateStr)
   const today = new Date(new Date().toDateString())
   const tomorrow = new Date(today)
   tomorrow.setDate(tomorrow.getDate() + 1)
