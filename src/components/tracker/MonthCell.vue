@@ -71,9 +71,10 @@ const props = defineProps({
   year: { type: Number, required: true },
   month: { type: Number, required: true },
   categoryId: { type: String, required: true },
+  store: { type: Object, default: null },
 })
 
-const store = useBudgetStore()
+const store = props.store ?? useBudgetStore()
 const { toast } = useToast()
 
 const trackingValue = computed(() => store.getTrackingValue(props.year, props.month, props.categoryId))

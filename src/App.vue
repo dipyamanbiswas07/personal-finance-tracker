@@ -41,6 +41,7 @@ import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "./stores/authStore.js";
 import { useCreditCardStore } from "./stores/creditCardStore.js";
 import { useBudgetStore } from "./stores/budgetStore.js";
+import { useFamilyStore } from "./stores/familyStore.js";
 import AppHeader from "./components/layout/AppHeader.vue";
 import AppToast from "./components/ui/AppToast.vue";
 
@@ -49,6 +50,7 @@ const route = useRoute();
 const authStore = useAuthStore();
 const store = useBudgetStore();
 const ccStore = useCreditCardStore();
+const familyStore = useFamilyStore();
 
 const isLoading = computed(
   () => authStore.loading || store.loading || ccStore.loading,
@@ -57,7 +59,7 @@ const isLoading = computed(
 onMounted(async () => {
   await authStore.init();
   if (authStore.user) {
-    await Promise.all([store.loadData(), ccStore.loadData()]);
+    await Promise.all([store.loadData(), ccStore.loadData(), familyStore.loadFamily()]);
   }
 });
 
@@ -65,7 +67,7 @@ watch(
   () => authStore.user,
   async (user) => {
     if (user) {
-      await Promise.all([store.loadData(), ccStore.loadData()]);
+      await Promise.all([store.loadData(), ccStore.loadData(), familyStore.loadFamily()]);
       // After OAuth redirect the router guard may have already landed on /login
       // before the session was established — push to dashboard if still on a public page.
       if (route.meta.public) {
@@ -74,6 +76,7 @@ watch(
     } else {
       store.clearData();
       ccStore.clearData();
+      familyStore.clearData();
     }
   },
 );
