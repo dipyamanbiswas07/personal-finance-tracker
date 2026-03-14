@@ -1,6 +1,6 @@
-# Personal Finance Tracker
+# Monthly Budget Tracker
 
-A personal finance tracker built as a Vue 3 SPA. Configure budget categories across four types, track monthly payments with full or partial amounts, and monitor investments — all stored locally in the browser with no backend or accounts required.
+A personal and family finance tracker built as a Vue 3 SPA with Supabase backend. Configure budget categories across four types, track monthly payments with full or partial amounts, monitor investments, and collaborate with family members — all in a dark-themed, mobile-friendly interface.
 
 ## Features
 
@@ -8,15 +8,19 @@ A personal finance tracker built as a Vue 3 SPA. Configure budget categories acr
 - **Categories** — Add, edit, and delete budget categories with a name, monthly amount, and type (Expense, Investment, EMI/Loan, Short term saving). 12-column tracking grid with year selector built into the same view
 - **Three-state tracking** — Mark categories as done (full amount), partial (enter a custom amount), or reset to undone; partial amounts count toward completion
 - **Credit Cards** — Track monthly credit card payment status separately from budget categories
+- **Family Collaboration** — Create or join a family group via invite code. Shared budget categories, tracking, and task management for the whole family
+  - **Family Tasks** — Create tasks with assignees and due dates. Open/Closed tabs, "My Tasks" filter, overdue badges. Users can only delete their own tasks
+  - **Family Members** — View members with display names and avatars. Owner can manage membership
+- **Authentication** — Email/password and OAuth sign-in via Supabase Auth
 - **Export / Import** — Download all data as a JSON file and restore it on any device via the header buttons
-- **Persistent storage** — Everything saved to `localStorage`; survives page refreshes
 
 ## Tech Stack
 
-- [Vue 3](https://vuejs.org/) + [Vite](https://vitejs.dev/)
-- [Pinia](https://pinia.vuejs.org/) — state management
-- [Vue Router 4](https://router.vuejs.org/) — hash-mode routing (no server required)
+- [Vue 3](https://vuejs.org/) + [Vite 7](https://vitejs.dev/)
+- [Pinia 3](https://pinia.vuejs.org/) — state management
+- [Vue Router 4](https://router.vuejs.org/) — hash-mode routing
 - [Tailwind CSS v3](https://tailwindcss.com/) — utility-first styling, dark-only design
+- [Supabase](https://supabase.com/) — PostgreSQL database, authentication, and Row Level Security
 
 ## Getting Started
 
@@ -36,19 +40,26 @@ npm run preview  # preview the production build locally
 
 | Path | Description |
 |---|---|
-| `/` | Dashboard (merged with insights) |
+| `/login` | Sign in / sign up |
+| `/` | Dashboard |
 | `/categories` | Category management + 12-month tracking grid |
 | `/credit-cards` | Credit card payment tracker |
+| `/family` | Family collaboration — members, shared budget, tasks |
 
 ## Data Storage
 
-All data lives in `localStorage` under these keys:
+All data is stored in Supabase (PostgreSQL) with Row Level Security:
 
-| Key | Contents |
+| Table | Purpose |
 |---|---|
-| `budget_categories` | Array of category objects (id, name, amount, type, color) |
-| `budget_tracking` | Nested map: `year → month → categoryId → false \| true \| number` |
-| `budget_settings` | Currency symbol and selected year |
-| `cc_cards` | Array of credit card objects (id, name, color) |
-| `cc_tracking` | Nested map: `year → month → cardId → boolean` |
-| `cc_settings` | Selected year for credit cards view |
+| `categories` | Personal budget categories (name, amount, type, color) |
+| `tracking` | Personal monthly tracking (year, month, category, value) |
+| `settings` | Personal preferences (currency, selected year) |
+| `cc_cards` | Credit card definitions |
+| `cc_tracking` | Credit card monthly payment status |
+| `families` | Family groups with invite codes |
+| `family_members` | Membership with roles and display names |
+| `family_categories` | Shared budget categories |
+| `family_tracking` | Shared monthly tracking |
+| `family_settings` | Family-level preferences |
+| `family_tasks` | Shared tasks with assignees and due dates |
