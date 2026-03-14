@@ -52,21 +52,30 @@ function isCurrentUser(userId) {
   return authStore.user?.id === userId
 }
 
+function getMember(userId) {
+  return familyStore.members.find(m => m.user_id === userId)
+}
+
 function memberEmail(userId) {
-  // For now display user ID shortened — Supabase RLS prevents seeing other users' emails
-  // The owner's own email is available via authStore
-  if (isCurrentUser(userId)) return authStore.user?.email ?? 'You'
-  return `Member ${userId.slice(0, 8)}…`
+  if (isCurrentUser(userId)) {
+    return authStore.user?.user_metadata?.full_name || authStore.user?.email || 'You'
+  }
+  const member = getMember(userId)
+  return member?.display_name || `Member ${userId.slice(0, 8)}…`
 }
 
 function memberInitials(userId) {
+  let name = ''
   if (isCurrentUser(userId)) {
-    const name = authStore.user?.user_metadata?.full_name ?? authStore.user?.email ?? ''
-    const parts = name.trim().split(/\s+/)
-    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-    return name.slice(0, 2).toUpperCase()
+    name = authStore.user?.user_metadata?.full_name ?? authStore.user?.email ?? ''
+  } else {
+    const member = getMember(userId)
+    name = member?.display_name || ''
   }
-  return userId.slice(0, 2).toUpperCase()
+  if (!name) return userId.slice(0, 2).toUpperCase()
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  return name.slice(0, 2).toUpperCase()
 }
 
 function formatDate(dateStr) {

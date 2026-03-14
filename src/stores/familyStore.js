@@ -77,10 +77,23 @@ export const useFamilyStore = defineStore('family', () => {
     }
   }
 
+  function getDisplayName() {
+    const { data } = supabase.auth.getUser?.() ?? {}
+    const user = data?.user
+    return user?.user_metadata?.full_name || user?.email || null
+  }
+
+  async function getDisplayNameAsync() {
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session?.user
+    return user?.user_metadata?.full_name || user?.email || null
+  }
+
   async function createFamily(name) {
     const userId = await getCurrentUserId()
     if (!userId) throw new Error('Not authenticated')
 
+    const displayName = await getDisplayNameAsync()
     const code = generateInviteCode()
 
     const { data: fam, error: famErr } = await supabase
@@ -102,6 +115,7 @@ export const useFamilyStore = defineStore('family', () => {
         family_id: fam.id,
         user_id: userId,
         role: 'owner',
+        display_name: displayName,
       })
 
     if (memErr) throw memErr
@@ -116,13 +130,18 @@ export const useFamilyStore = defineStore('family', () => {
       family_id: fam.id,
       user_id: userId,
       role: 'owner',
+      display_name: displayName,
       joined_at: new Date().toISOString(),
     }]
   }
 
   async function joinFamily(code) {
+    const displayName = await getDisplayNameAsync()
     const { data: familyId, error } = await supabase
-      .rpc('join_family_by_code', { code: code.trim().toUpperCase() })
+      .rpc('join_family_by_code', {
+        code: code.trim().toUpperCase(),
+        display_name: displayName,
+      })
 
     if (error) throw error
 
