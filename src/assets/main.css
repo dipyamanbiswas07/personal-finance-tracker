@@ -9,13 +9,18 @@
   }
 
   * {
-    @apply border-white/10;
+    @apply border-white/[0.06];
   }
 }
 
 @layer components {
   .glass-card {
-    @apply bg-bg-card/80 backdrop-blur-sm border border-white/10 rounded-xl;
+    @apply bg-bg-card border border-white/[0.06] rounded-2xl;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 2px 12px rgba(0,0,0,0.25);
+  }
+
+  .glass-card:hover {
+    border-color: rgba(255,255,255,0.09);
   }
 
   .nav-link {
@@ -30,21 +35,30 @@
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: rgba(99,102,241,0.4) transparent;
+    scrollbar-color: rgba(167,139,250,0.35) transparent;
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }
 
 @keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(16px);
+    transform: translateY(18px);
+    filter: blur(6px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
+    filter: blur(0);
   }
 }
 
 .anim-fade-up {
-  animation: fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }

@@ -297,9 +297,9 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 const store = useCreditCardStore()
 const { toast } = useToast()
-const now = new Date()
-const currentMonth = now.getMonth() + 1
-const isCurrentYear = computed(() => store.currentYear === now.getFullYear())
+import { currentMonth, currentYear as defaultYear } from '../composables/useCurrentPeriod.js'
+
+const isCurrentYear = computed(() => store.currentYear === defaultYear)
 
 // Mobile month selector
 const selectedMonth = ref(currentMonth)

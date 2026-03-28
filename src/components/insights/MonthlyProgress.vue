@@ -57,10 +57,9 @@ import { useBudgetStore } from '../../stores/budgetStore.js'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
+import { currentMonth, currentYear } from '../../composables/useCurrentPeriod.js'
+
 const store = useBudgetStore()
-const now = new Date()
-const currentYear = now.getFullYear()
-const currentMonth = now.getMonth() + 1
 
 const completions = computed(() => store.completionForYear(currentYear))
 </script>

@@ -64,6 +64,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useAuthStore } from '../stores/authStore.js'
 import { useBudgetStore } from '../stores/budgetStore.js'
 import SummaryCards from '../components/insights/SummaryCards.vue'
 import DonutChart from '../components/insights/DonutChart.vue'
@@ -72,19 +73,23 @@ import YTDSummary from '../components/insights/YTDSummary.vue'
 import MonthlyProgress from '../components/insights/MonthlyProgress.vue'
 import CategoryBreakdown from '../components/insights/CategoryBreakdown.vue'
 
+const authStore = useAuthStore()
 const store = useBudgetStore()
+
+import { currentMonth, currentYear, currentMonthName } from '../composables/useCurrentPeriod.js'
 
 const now = new Date()
 const hour = now.getHours()
-const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+const firstName = computed(() => {
+  const meta = authStore.user?.user_metadata
+  const name = meta?.full_name ?? meta?.name ?? authStore.user?.email?.split('@')[0] ?? ''
+  return name.split(/\s+/)[0]
+})
+const greeting = computed(() => {
+  const base = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+  return firstName.value ? `${base}, ${firstName.value}` : base
+})
 const formattedDate = now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-
-// After the 20th, show next month's data
-const dayOfMonth = now.getDate()
-const realMonth = now.getMonth() + 1
-const currentMonth = dayOfMonth > 20 ? (realMonth === 12 ? 1 : realMonth + 1) : realMonth
-const currentYear = dayOfMonth > 20 && realMonth === 12 ? now.getFullYear() + 1 : now.getFullYear()
-const currentMonthName = new Date(currentYear, currentMonth - 1).toLocaleString('default', { month: 'long' })
 
 const monthCompletion = computed(() => store.completionForMonth(currentYear, currentMonth))
 </script>

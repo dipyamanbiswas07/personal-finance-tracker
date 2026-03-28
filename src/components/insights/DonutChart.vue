@@ -94,25 +94,68 @@
     </div>
 
     <!-- Investment by month line chart -->
-    <div v-if="store.totalInvestment > 0" class="mt-5 pt-4 border-t border-white/10 flex flex-col flex-1 min-h-0">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">Investments — {{ currentYear }}</span>
-        <span v-if="lastPoint" class="text-xs font-semibold text-investment">{{ store.settings.currencySymbol }}{{ formatK(lastPoint.paid) }}</span>
+    <div v-if="store.totalInvestment > 0" class="mt-5 pt-4 border-t border-white/[0.06] flex flex-col flex-1 min-h-0">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">Investments — {{ currentYear }}</span>
+        </div>
+        <div v-if="lastPoint" class="flex items-center gap-3">
+          <div class="flex items-center gap-1.5 text-[10px] text-text-muted">
+            <span class="w-4 border-t border-dashed border-text-muted/40" />
+            Ideal
+          </div>
+          <span class="text-xs font-bold text-investment">{{ store.settings.currencySymbol }}{{ formatK(lastPoint.paid) }}</span>
+        </div>
       </div>
-      <div class="flex-1 min-h-[130px]">
-        <svg :viewBox="`0 0 ${CW} ${CH}`" class="w-full h-full" preserveAspectRatio="none">
+      <div class="flex-1 min-h-[160px]">
+        <svg :viewBox="`0 0 ${CW} ${CH}`" class="w-full h-full" preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="mini-inv-grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#10b981" stop-opacity="0.25" />
-              <stop offset="100%" stop-color="#10b981" stop-opacity="0.01" />
+              <stop offset="0%" stop-color="#34d399" stop-opacity="0.2" />
+              <stop offset="60%" stop-color="#34d399" stop-opacity="0.05" />
+              <stop offset="100%" stop-color="#34d399" stop-opacity="0" />
             </linearGradient>
+            <filter id="line-glow">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
 
-          <!-- Area -->
+          <!-- Horizontal grid lines -->
+          <line
+            v-for="i in 4"
+            :key="'grid' + i"
+            :x1="CPL" :x2="CW - CPR"
+            :y1="CPT + ((i - 1) / 3) * CPLOT_H" :y2="CPT + ((i - 1) / 3) * CPLOT_H"
+            stroke="rgba(255,255,255,0.04)" stroke-width="1"
+          />
+
+          <!-- Y-axis labels -->
+          <text
+            v-for="i in 4"
+            :key="'yl' + i"
+            :x="CPL - 2" :y="CPT + ((i - 1) / 3) * CPLOT_H + 3"
+            text-anchor="end"
+            style="font-size:7px; fill:rgba(113,113,122,0.5)"
+          >{{ formatK(chartMaxY * (1 - (i - 1) / 3)) }}</text>
+
+          <!-- Ideal pace line (diagonal from 0 to annual target) -->
+          <line
+            :x1="cxp(0)" :y1="cyp(0)"
+            :x2="cxp(11)" :y2="cyp(store.totalInvestment * 12)"
+            stroke="rgba(113,113,122,0.2)" stroke-width="1"
+            stroke-dasharray="4 3"
+          />
+
+          <!-- Area fill -->
           <path :d="miniAreaD" fill="url(#mini-inv-grad)" />
 
-          <!-- Line -->
-          <path :d="miniLineD" fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          <!-- Line with glow -->
+          <path :d="miniLineD" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" filter="url(#line-glow)" opacity="0.4" />
+          <path :d="miniLineD" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
 
           <!-- Dots + hover (only months with data) -->
           <g
@@ -122,26 +165,43 @@
             @mouseenter="hoveredMonth = m.month"
             @mouseleave="hoveredMonth = null"
           >
-            <circle :cx="cxp(m.month - 1)" :cy="cyp(m.paid)" r="8" fill="transparent" />
+            <circle :cx="cxp(m.month - 1)" :cy="cyp(m.paid)" r="12" fill="transparent" />
+
+            <!-- Pulse ring on current month -->
+            <circle
+              v-if="m.month === currentMonth && hoveredMonth !== m.month"
+              :cx="cxp(m.month - 1)" :cy="cyp(m.paid)"
+              r="8" fill="none" stroke="#34d399" stroke-width="1" opacity="0.25"
+              class="animate-ping"
+              style="animation-duration:2s; transform-origin: center; transform-box: fill-box;"
+            />
+
             <circle
               :cx="cxp(m.month - 1)" :cy="cyp(m.paid)"
-              :r="hoveredMonth === m.month ? 4 : m.month === currentMonth ? 3.5 : 2.5"
-              fill="#10b981"
+              :r="hoveredMonth === m.month ? 5 : m.month === currentMonth ? 4 : 3"
+              fill="#34d399"
               :fill-opacity="m.paid > 0 ? 1 : 0.3"
-              stroke="#0f1117" stroke-width="1.5"
+              stroke="#18181b" stroke-width="2"
+              style="transition: r 0.15s ease"
             />
 
             <!-- Tooltip -->
             <g v-if="hoveredMonth === m.month">
+              <!-- Vertical guide line -->
+              <line
+                :x1="cxp(m.month - 1)" :y1="cyp(m.paid) + 6"
+                :x2="cxp(m.month - 1)" :y2="CPT + CPLOT_H"
+                stroke="rgba(52,211,153,0.2)" stroke-width="1" stroke-dasharray="2 2"
+              />
               <rect
-                :x="miniTooltipX(m.month - 1)" :y="cyp(m.paid) - 26"
-                :width="TTW" height="20" rx="4"
-                fill="#1e2130" stroke="rgba(255,255,255,0.15)" stroke-width="1"
+                :x="miniTooltipX(m.month - 1)" :y="cyp(m.paid) - 32"
+                :width="TTW" height="24" rx="6"
+                fill="#18181b" stroke="rgba(52,211,153,0.25)" stroke-width="1"
               />
               <text
-                :x="miniTooltipX(m.month - 1) + TTW / 2" :y="cyp(m.paid) - 12"
+                :x="miniTooltipX(m.month - 1) + TTW / 2" :y="cyp(m.paid) - 16"
                 text-anchor="middle"
-                style="font-size:9px; fill:#f1f5f9; font-weight:600"
+                style="font-size:9px; fill:#fafaf9; font-weight:600; font-family:Outfit,system-ui,sans-serif"
               >{{ MONTHS_FULL[m.month - 1] }}: {{ store.settings.currencySymbol }}{{ formatAmount(m.paid) }}</text>
             </g>
           </g>
@@ -152,7 +212,7 @@
             :key="'xl' + i"
             :x="cxp(i)" :y="CH - 2"
             :text-anchor="i === 0 ? 'start' : i === 11 ? 'end' : 'middle'"
-            :style="`font-size:8px; fill:${i + 1 === currentMonth ? '#10b981' : 'rgba(148,163,184,0.5)'}`"
+            :style="`font-size:8px; font-family:Outfit,system-ui,sans-serif; fill:${i + 1 === currentMonth ? '#34d399' : 'rgba(113,113,122,0.5)'};${i + 1 === currentMonth ? ' font-weight:600' : ''}`"
           >{{ m }}</text>
         </svg>
       </div>
@@ -164,19 +224,17 @@
 import { ref, computed } from 'vue'
 import { useBudgetStore } from '../../stores/budgetStore.js'
 
+import { currentMonth, currentYear } from '../../composables/useCurrentPeriod.js'
+
 const store = useBudgetStore()
 
-const now = new Date()
-const currentYear = now.getFullYear()
-const currentMonth = now.getMonth() + 1
-
 // ── Mini line chart constants ──────────────────────────────────────────────
-const CW = 360
-const CH = 150
-const CPL = 4
-const CPR = 4
-const CPT = 12
-const CPB = 18
+const CW = 400
+const CH = 180
+const CPL = 32
+const CPR = 8
+const CPT = 14
+const CPB = 20
 const CPLOT_W = CW - CPL - CPR
 const CPLOT_H = CH - CPT - CPB
 const TTW = 120
@@ -220,12 +278,7 @@ function miniTooltipX(monthIdx) {
 
 function buildPath(pts) {
   if (!pts.length) return ''
-  let d = `M ${pts[0][0]},${pts[0][1]}`
-  for (let i = 1; i < pts.length; i++) {
-    const cpx = (pts[i - 1][0] + pts[i][0]) / 2
-    d += ` C ${cpx},${pts[i - 1][1]} ${cpx},${pts[i][1]} ${pts[i][0]},${pts[i][1]}`
-  }
-  return d
+  return pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p[0]},${p[1]}`).join(' ')
 }
 
 // Only plot the months that have data

@@ -39,11 +39,9 @@
 import { computed, h } from 'vue'
 import { useBudgetStore } from '../../stores/budgetStore.js'
 
-const store = useBudgetStore()
+import { currentMonth, currentYear, currentMonthName } from '../../composables/useCurrentPeriod.js'
 
-const now = new Date()
-const currentYear = now.getFullYear()
-const currentMonth = now.getMonth() + 1
+const store = useBudgetStore()
 
 function fmt(n) {
   return new Intl.NumberFormat('en-IN').format(n)
@@ -111,7 +109,7 @@ const cards = computed(() => [
     accentColor: '#10b981',
     value: fmt(paidSoFar.value),
     prefix: sym.value,
-    sub: now.toLocaleString('default', { month: 'long' }),
+    sub: currentMonthName,
     icon: PaidIcon,
     iconBg: 'bg-investment/15',
     iconColor: 'text-investment',

@@ -133,13 +133,10 @@ import BaseInput from '../ui/BaseInput.vue'
 import BaseButton from '../ui/BaseButton.vue'
 import BaseConfirmDialog from '../ui/BaseConfirmDialog.vue'
 
+import { currentMonth, currentYear, currentMonthName } from '../../composables/useCurrentPeriod.js'
+
 const store = useBudgetStore()
 const { toast } = useToast()
-
-const now = new Date()
-const currentYear = now.getFullYear()
-const currentMonth = now.getMonth() + 1
-const currentMonthName = now.toLocaleString('default', { month: 'long', year: 'numeric' })
 
 const completion = computed(() => store.completionForMonth(currentYear, currentMonth))
 

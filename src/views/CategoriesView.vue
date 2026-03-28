@@ -67,7 +67,7 @@
           <div class="text-center">
             <p class="text-sm font-semibold text-text-primary">{{ MONTHS[selectedMonth - 1] }} {{ store.settings.currentYear }}</p>
             <p class="text-xs text-text-muted">
-              {{ mobileCompletion.done }}/{{ mobileCompletion.total }} Completed · <span :class="mobileCompletion.total - mobileCompletion.done === 0 ? 'text-investment' : 'text-expense'">{{ mobileCompletion.total - mobileCompletion.done }} Remaining</span>
+              {{ mobileCompletion.done }}/{{ mobileCompletion.total }} Completed · <span :class="mobileRemaining === 0 ? 'text-investment' : 'text-expense'">{{ mobileRemaining === 0 ? 'All paid' : store.settings.currencySymbol + fmt(mobileRemaining) + ' left' }}</span>
             </p>
           </div>
           <button
@@ -247,13 +247,13 @@
                 >
                   <span
                     :class="[
-                      'text-xs font-medium',
-                      completions[monthIdx - 1].total - completions[monthIdx - 1].done === 0 && store.categories.length > 0
+                      'text-[10px] font-semibold tabular-nums',
+                      remainingPerMonth[monthIdx - 1] === 0 && store.categories.length > 0
                         ? 'text-investment'
                         : 'text-expense',
                     ]"
                   >
-                    {{ completions[monthIdx - 1].total - completions[monthIdx - 1].done }}
+                    {{ remainingPerMonth[monthIdx - 1] === 0 ? '—' : store.settings.currencySymbol + fmt(remainingPerMonth[monthIdx - 1]) }}
                   </span>
                 </td>
                 <td class="sticky right-0 bg-bg-surface/80 z-10" />
@@ -311,6 +311,7 @@
 import { ref, computed } from 'vue'
 import { useBudgetStore } from '../stores/budgetStore.js'
 import { useToast } from '../composables/useToast.js'
+import { currentMonth, currentYear as defaultYear } from '../composables/useCurrentPeriod.js'
 import MonthCell from '../components/tracker/MonthCell.vue'
 import CategoryForm from '../components/categories/CategoryForm.vue'
 import BaseButton from '../components/ui/BaseButton.vue'
@@ -320,23 +321,16 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 const store = useBudgetStore()
 const { toast } = useToast()
-const now = new Date()
-const dayOfMonth = now.getDate()
-const realMonth = now.getMonth() + 1
-// After the 20th, default to next month
-const defaultMonth = dayOfMonth > 20 ? (realMonth === 12 ? 1 : realMonth + 1) : realMonth
-const defaultYear = dayOfMonth > 20 && realMonth === 12 ? now.getFullYear() + 1 : now.getFullYear()
-const currentMonth = defaultMonth
 const isCurrentYear = computed(() => store.settings.currentYear === defaultYear)
 const completions = computed(() => store.completionForYear(store.settings.currentYear))
 
 // Auto-advance year if needed (e.g. Dec 21+ → show January of next year)
-if (store.settings.currentYear === now.getFullYear() && defaultYear !== now.getFullYear()) {
+if (store.settings.currentYear === new Date().getFullYear() && defaultYear !== new Date().getFullYear()) {
   changeYear(defaultYear)
 }
 
 // Mobile month selector (defaults to next month after the 20th)
-const selectedMonth = ref(defaultMonth)
+const selectedMonth = ref(currentMonth)
 const mobileCompletion = computed(() => store.completionForMonth(store.settings.currentYear, selectedMonth.value))
 
 const sections = computed(() => [
@@ -345,6 +339,31 @@ const sections = computed(() => [
   { label: 'EMI / Loan',        color: '#f59e0b', total: store.totalEMI,        categories: store.emis        },
   { label: 'Short term saving', color: '#8b5cf6', total: store.totalSaving,     categories: store.savings     },
 ].filter(s => s.categories.length > 0))
+
+// Remaining money per month (budget minus paid/partial)
+const remainingPerMonth = computed(() =>
+  Array.from({ length: 12 }, (_, i) => {
+    const month = i + 1
+    const paid = store.categories.reduce((sum, cat) => {
+      const v = store.getTrackingValue(store.settings.currentYear, month, cat.id)
+      if (v === true) return sum + (cat.amount ?? 0)
+      if (typeof v === 'number' && v > 0) return sum + v
+      return sum
+    }, 0)
+    return Math.max(0, store.totalBudget - paid)
+  })
+)
+
+// Remaining money for mobile selected month
+const mobileRemaining = computed(() => {
+  const paid = store.categories.reduce((sum, cat) => {
+    const v = store.getTrackingValue(store.settings.currentYear, selectedMonth.value, cat.id)
+    if (v === true) return sum + (cat.amount ?? 0)
+    if (typeof v === 'number' && v > 0) return sum + v
+    return sum
+  }, 0)
+  return Math.max(0, store.totalBudget - paid)
+})
 
 const showForm = ref(false)
 const editingCategory = ref(null)

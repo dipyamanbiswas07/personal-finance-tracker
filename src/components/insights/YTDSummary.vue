@@ -121,12 +121,9 @@
 import { computed } from 'vue'
 import { useBudgetStore } from '../../stores/budgetStore.js'
 
-const store = useBudgetStore()
+import { currentMonth, currentYear, currentMonthName } from '../../composables/useCurrentPeriod.js'
 
-const now = new Date()
-const currentYear  = now.getFullYear()
-const currentMonth = now.getMonth() + 1
-const currentMonthName = now.toLocaleString('default', { month: 'long' })
+const store = useBudgetStore()
 
 // Use actual tracked amounts (full or partial) for each category
 function doneForMonth(type, month) {

@@ -4,7 +4,7 @@
     <div class="fixed inset-0 z-0 pointer-events-none" aria-hidden="true">
       <div
         class="absolute -top-32 left-1/2 -translate-x-1/2 w-[1000px] h-[560px] rounded-full"
-        style="background: radial-gradient(ellipse at top, rgba(99,102,241,0.09) 0%, transparent 68%)"
+        style="background: radial-gradient(ellipse at top, rgba(167,139,250,0.06) 0%, transparent 68%)"
       />
     </div>
 
