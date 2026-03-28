@@ -78,9 +78,13 @@ const now = new Date()
 const hour = now.getHours()
 const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 const formattedDate = now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-const currentYear = now.getFullYear()
-const currentMonth = now.getMonth() + 1
-const currentMonthName = now.toLocaleString('default', { month: 'long' })
+
+// After the 20th, show next month's data
+const dayOfMonth = now.getDate()
+const realMonth = now.getMonth() + 1
+const currentMonth = dayOfMonth > 20 ? (realMonth === 12 ? 1 : realMonth + 1) : realMonth
+const currentYear = dayOfMonth > 20 && realMonth === 12 ? now.getFullYear() + 1 : now.getFullYear()
+const currentMonthName = new Date(currentYear, currentMonth - 1).toLocaleString('default', { month: 'long' })
 
 const monthCompletion = computed(() => store.completionForMonth(currentYear, currentMonth))
 </script>

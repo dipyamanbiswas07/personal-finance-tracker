@@ -67,7 +67,7 @@
           <div class="text-center">
             <p class="text-sm font-semibold text-text-primary">{{ MONTHS[selectedMonth - 1] }} {{ store.settings.currentYear }}</p>
             <p class="text-xs text-text-muted">
-              {{ mobileCompletion.done }}/{{ mobileCompletion.total }} Completed
+              {{ mobileCompletion.done }}/{{ mobileCompletion.total }} Completed · <span :class="mobileCompletion.total - mobileCompletion.done === 0 ? 'text-investment' : 'text-expense'">{{ mobileCompletion.total - mobileCompletion.done }} Remaining</span>
             </p>
           </div>
           <button
@@ -235,6 +235,31 @@
             <tfoot>
               <tr class="border-t border-white/10 bg-bg-surface/50">
                 <td class="px-4 py-2.5 sticky left-0 bg-bg-surface/80 z-10">
+                  <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">Remaining</span>
+                </td>
+                <td
+                  v-for="monthIdx in 12"
+                  :key="monthIdx"
+                  :class="[
+                    'px-1.5 py-2.5 text-center',
+                    monthIdx === currentMonth && isCurrentYear ? 'bg-accent/10' : '',
+                  ]"
+                >
+                  <span
+                    :class="[
+                      'text-xs font-medium',
+                      completions[monthIdx - 1].total - completions[monthIdx - 1].done === 0 && store.categories.length > 0
+                        ? 'text-investment'
+                        : 'text-expense',
+                    ]"
+                  >
+                    {{ completions[monthIdx - 1].total - completions[monthIdx - 1].done }}
+                  </span>
+                </td>
+                <td class="sticky right-0 bg-bg-surface/80 z-10" />
+              </tr>
+              <tr class="border-t border-white/5 bg-bg-surface/50">
+                <td class="px-4 py-2.5 sticky left-0 bg-bg-surface/80 z-10">
                   <span class="text-xs font-semibold text-text-muted uppercase tracking-wider">Completed</span>
                 </td>
                 <td
@@ -296,12 +321,22 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const store = useBudgetStore()
 const { toast } = useToast()
 const now = new Date()
-const currentMonth = now.getMonth() + 1
-const isCurrentYear = computed(() => store.settings.currentYear === now.getFullYear())
+const dayOfMonth = now.getDate()
+const realMonth = now.getMonth() + 1
+// After the 20th, default to next month
+const defaultMonth = dayOfMonth > 20 ? (realMonth === 12 ? 1 : realMonth + 1) : realMonth
+const defaultYear = dayOfMonth > 20 && realMonth === 12 ? now.getFullYear() + 1 : now.getFullYear()
+const currentMonth = defaultMonth
+const isCurrentYear = computed(() => store.settings.currentYear === defaultYear)
 const completions = computed(() => store.completionForYear(store.settings.currentYear))
 
-// Mobile month selector (defaults to current month)
-const selectedMonth = ref(currentMonth)
+// Auto-advance year if needed (e.g. Dec 21+ → show January of next year)
+if (store.settings.currentYear === now.getFullYear() && defaultYear !== now.getFullYear()) {
+  changeYear(defaultYear)
+}
+
+// Mobile month selector (defaults to next month after the 20th)
+const selectedMonth = ref(defaultMonth)
 const mobileCompletion = computed(() => store.completionForMonth(store.settings.currentYear, selectedMonth.value))
 
 const sections = computed(() => [

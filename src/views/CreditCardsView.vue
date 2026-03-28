@@ -99,7 +99,7 @@
                 :class="[
                   'w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-bg-card',
                   store.isPaid(store.currentYear, selectedMonth, card.id)
-                    ? 'bg-investment/20 border border-investment/40 text-investment focus:ring-investment/50 hover:bg-expense/20 hover:border-expense/40 hover:text-expense'
+                    ? 'bg-investment/20 border border-investment/40 text-investment focus:ring-investment/50 hover:bg-investment/30 hover:border-investment/50'
                     : 'bg-white/5 border border-white/10 text-transparent hover:border-accent/40 hover:text-accent/40 focus:ring-accent/30',
                 ]"
                 :title="store.isPaid(store.currentYear, selectedMonth, card.id) ? 'Mark as unpaid' : 'Mark as paid'"
@@ -182,7 +182,7 @@
                       :class="[
                         'w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-offset-bg-card',
                         store.isPaid(store.currentYear, monthIdx, card.id)
-                          ? 'bg-investment/20 border border-investment/40 text-investment focus:ring-investment/50 hover:bg-expense/20 hover:border-expense/40 hover:text-expense'
+                          ? 'bg-investment/20 border border-investment/40 text-investment focus:ring-investment/50 hover:bg-investment/30 hover:border-investment/50'
                           : 'bg-white/5 border border-white/10 text-transparent hover:border-accent/40 hover:text-accent/40 focus:ring-accent/30',
                       ]"
                       :title="store.isPaid(store.currentYear, monthIdx, card.id) ? 'Mark as unpaid' : 'Mark as paid'"
