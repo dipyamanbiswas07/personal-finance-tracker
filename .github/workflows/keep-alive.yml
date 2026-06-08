@@ -12,7 +12,9 @@ jobs:
       - name: Ping Supabase
         run: |
           response=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://xllvxrsnzhvsczjknwdv.supabase.co/auth/v1/health")
+            "${{ secrets.SUPABASE_URL }}/rest/v1/categories?limit=1" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
           echo "Response code: $response"
           if [ "$response" -ge 200 ] && [ "$response" -lt 300 ]; then
             echo "Supabase project is active."
