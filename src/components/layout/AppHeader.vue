@@ -188,6 +188,7 @@ const mainLinks = [
 const utilLinks = [
   { to: '/credit-cards', label: 'Cards' },
   { to: '/family', label: 'Family' },
+  { to: '/important-dates', label: 'Dates' },
 ]
 
 const fileInput = ref(null)

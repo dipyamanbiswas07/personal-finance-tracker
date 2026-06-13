@@ -3,6 +3,7 @@ import DashboardView from '../views/DashboardView.vue'
 import CategoriesView from '../views/CategoriesView.vue'
 import CreditCardsView from '../views/CreditCardsView.vue'
 import FamilyView from '../views/FamilyView.vue'
+import ImportantDatesView from '../views/ImportantDatesView.vue'
 import LoginView from '../views/LoginView.vue'
 import { useAuthStore } from '../stores/authStore.js'
 
@@ -14,6 +15,7 @@ const routes = [
   { path: '/insights', redirect: '/' },
   { path: '/credit-cards', component: CreditCardsView, meta: { title: 'Credit Cards' } },
   { path: '/family', component: FamilyView, meta: { title: 'Family' } },
+  { path: '/important-dates', component: ImportantDatesView, meta: { title: 'Important Dates' } },
 ]
 
 const router = createRouter({
