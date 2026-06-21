@@ -9,15 +9,20 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase
+      - name: Upsert heartbeat to Supabase
         run: |
+          timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           response=$(curl -s -o /dev/null -w "%{http_code}" \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/categories?limit=1" \
+            -X POST \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/keep_alive" \
             -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: resolution=merge-duplicates" \
+            -d "{\"id\": 1, \"last_ping\": \"$timestamp\"}")
           echo "Response code: $response"
           if [ "$response" -ge 200 ] && [ "$response" -lt 300 ]; then
-            echo "Supabase project is active."
+            echo "Heartbeat written at $timestamp"
           else
             echo "Unexpected response: $response" && exit 1
           fi
