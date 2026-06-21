@@ -2,7 +2,7 @@ name: Supabase Keep Alive
 
 on:
   schedule:
-    - cron: '0 9 */3 * *'  # every 3 days at 9am UTC
+    - cron: '0 9 * * *'  # every day at 9am UTC
   workflow_dispatch:        # allow manual trigger
 
 jobs:
@@ -21,3 +21,4 @@ jobs:
           else
             echo "Unexpected response: $response" && exit 1
           fi
+
