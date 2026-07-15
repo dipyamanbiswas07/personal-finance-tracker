@@ -46,7 +46,7 @@
           <span
             :class="[
               'text-sm truncate transition-colors',
-              trackingState(cat.id) !== 'none' ? 'text-text-muted line-through' : 'text-text-primary',
+              trackingState(cat.id) === 'done' || trackingState(cat.id) === 'partial' ? 'text-text-muted line-through' : 'text-text-primary',
             ]"
           >{{ cat.name }}</span>
           <BaseBadge :type="cat.type" />
@@ -61,14 +61,19 @@
               ? 'bg-investment/20 border-investment/40 text-investment'
               : trackingState(cat.id) === 'partial'
                 ? 'bg-emi/20 border-emi/40 text-emi'
-                : 'border-white/15 text-transparent group-hover:border-accent/40',
+                : trackingState(cat.id) === 'notdone'
+                  ? 'bg-expense/20 border-expense/40 text-expense'
+                  : 'border-white/15 text-transparent group-hover:border-accent/40',
           ]"
         >
-          <svg v-if="trackingState(cat.id) !== 'partial'" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          <svg v-if="trackingState(cat.id) === 'partial'" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+          </svg>
+          <svg v-else-if="trackingState(cat.id) === 'notdone'" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" />
           </svg>
           <svg v-else class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         </div>
       </div>
@@ -144,6 +149,7 @@ function trackingState(categoryId) {
   const v = store.getTrackingValue(currentYear, currentMonth, categoryId)
   if (v === true) return 'done'
   if (typeof v === 'number' && v > 0) return 'partial'
+  if (v === false) return 'notdone'
   return 'none'
 }
 

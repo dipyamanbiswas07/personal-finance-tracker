@@ -9,15 +9,20 @@
           ? 'bg-investment/20 border border-investment/40 text-investment focus:ring-investment/50 hover:bg-white/10 hover:border-white/20 hover:text-text-muted'
           : state === 'partial'
             ? 'bg-emi/20 border border-emi/40 text-emi focus:ring-emi/50 hover:bg-white/10 hover:border-white/20 hover:text-text-muted'
-            : 'bg-white/5 border border-white/10 text-transparent hover:border-accent/40 hover:text-accent/40 focus:ring-accent/30',
+            : state === 'notdone'
+              ? 'bg-expense/20 border border-expense/40 text-expense focus:ring-expense/50 hover:bg-white/10 hover:border-white/20 hover:text-text-muted'
+              : 'bg-white/5 border border-white/10 text-transparent hover:border-accent/40 hover:text-accent/40 focus:ring-accent/30',
       ]"
       @click="handleClick"
     >
-      <svg v-if="state !== 'partial'" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+      <svg v-if="state === 'partial'" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+      </svg>
+      <svg v-else-if="state === 'notdone'" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6L6 18" />
       </svg>
       <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
       </svg>
     </button>
 
@@ -82,6 +87,7 @@ const state = computed(() => {
   const v = trackingValue.value
   if (v === true) return 'done'
   if (typeof v === 'number' && v > 0) return 'partial'
+  if (v === false) return 'notdone'
   return 'none'
 })
 const category = computed(() => store.categoryMap[props.categoryId])
@@ -89,6 +95,7 @@ const category = computed(() => store.categoryMap[props.categoryId])
 const buttonTitle = computed(() => {
   if (state.value === 'done') return 'Paid in full — click to edit'
   if (state.value === 'partial') return `Partial: ${store.settings.currencySymbol}${trackingValue.value} — click to edit`
+  if (state.value === 'notdone') return 'Marked not done — click to edit'
   return 'Record payment'
 })
 

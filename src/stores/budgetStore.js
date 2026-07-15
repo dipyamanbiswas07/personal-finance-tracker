@@ -70,7 +70,7 @@ export const useBudgetStore = defineStore('budget', () => {
   }
 
   function getTrackingValue(year, month, categoryId) {
-    return tracking.value[year]?.[month]?.[categoryId] ?? false
+    return tracking.value[year]?.[month]?.[categoryId]
   }
 
   // ── Actions ────────────────────────────────────────────────────────────────
