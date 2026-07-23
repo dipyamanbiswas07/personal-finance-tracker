@@ -27,3 +27,16 @@ jobs:
             echo "Unexpected response: $response" && exit 1
           fi
 
+      - name: Query a real app table for good measure
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/categories?select=id&limit=1" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
+          echo "Response code: $response"
+          if [ "$response" -ge 200 ] && [ "$response" -lt 300 ]; then
+            echo "Categories table queried"
+          else
+            echo "Unexpected response: $response" && exit 1
+          fi
+
